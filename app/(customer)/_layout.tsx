@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+﻿import { Stack } from 'expo-router';
 
 import { colors } from '@/constants/theme';
 
@@ -18,6 +18,7 @@ export default function CustomerLayout() {
       <Stack.Screen name="favorites" />
       <Stack.Screen name="cart" />
       <Stack.Screen name="checkout" />
+      <Stack.Screen name="payment" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="edit-profile" />
       <Stack.Screen name="orders" />
@@ -39,3 +40,4 @@ export default function CustomerLayout() {
     </Stack>
   );
 }
+

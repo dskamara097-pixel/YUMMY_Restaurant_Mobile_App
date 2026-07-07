@@ -15,12 +15,15 @@ export default function AdminLayout() {
       <Stack.Screen name="restaurant-approval" />
       <Stack.Screen name="restaurants/[restaurantId]" />
       <Stack.Screen name="foods" />
+      <Stack.Screen name="add-food" />
       <Stack.Screen name="categories" />
       <Stack.Screen name="orders" />
+      <Stack.Screen name="payments" />
       <Stack.Screen name="orders/[orderId]" />
       <Stack.Screen name="coupons" />
       <Stack.Screen name="offers" />
       <Stack.Screen name="reviews" />
+      <Stack.Screen name="notifications" />
       <Stack.Screen name="reports" />
       <Stack.Screen name="analytics" />
       <Stack.Screen name="settings" />
@@ -28,3 +31,4 @@ export default function AdminLayout() {
     </Stack>
   );
 }
+
