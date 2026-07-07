@@ -1,0 +1,142 @@
+﻿rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+
+    function isVendor() {
+      return isSignedIn() && request.auth.token.role == 'vendor';
+    }
+
+    function isRider() {
+      return isSignedIn() && request.auth.token.role == 'rider';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function ownsRestaurant(restaurantId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/restaurants/$(restaurantId))
+        && get(/databases/$(database)/documents/restaurants/$(restaurantId)).data.ownerId == request.auth.uid;
+    }
+
+    function ownsRequestRestaurant() {
+      return isSignedIn() && request.resource.data.restaurantId is string && ownsRestaurant(request.resource.data.restaurantId);
+    }
+
+    function ownsExistingRestaurant() {
+      return isSignedIn() && resource.data.restaurantId is string && ownsRestaurant(resource.data.restaurantId);
+    }
+
+    function ownsRequestUserId() {
+      return isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function ownsExistingUserId() {
+      return isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function ownsRequestCustomerId() {
+      return isSignedIn() && request.resource.data.customerId == request.auth.uid;
+    }
+
+    function ownsExistingCustomerId() {
+      return isSignedIn() && resource.data.customerId == request.auth.uid;
+    }
+
+    function isAssignedRider() {
+      return isRider() && resource.data.riderId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read, create, update, delete: if isOwner(userId) || isAdmin();
+    }
+
+    match /restaurants/{restaurantId} {
+      allow read: if resource.data.status == 'approved' || resource.data.active == true || isAdmin() || resource.data.ownerId == request.auth.uid;
+      allow create: if isAdmin() || (isSignedIn() && request.resource.data.ownerId == request.auth.uid);
+      allow update, delete: if isAdmin() || resource.data.ownerId == request.auth.uid;
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isAdmin() || ownsRequestRestaurant();
+      allow update, delete: if isAdmin() || ownsExistingRestaurant();
+    }
+
+    match /foods/{foodId} {
+      allow read: if resource.data.available == true || isAdmin() || ownsExistingRestaurant();
+      allow create: if isAdmin() || ownsRequestRestaurant();
+      allow update, delete: if isAdmin() || ownsExistingRestaurant();
+    }
+
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow create: if isAdmin() || ownsRequestRestaurant();
+      allow update, delete: if isAdmin() || ownsExistingRestaurant();
+    }
+
+    match /offers/{offerId} {
+      allow read: if true;
+      allow create: if isAdmin() || ownsRequestRestaurant();
+      allow update, delete: if isAdmin() || ownsExistingRestaurant();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if ownsRequestUserId() || isAdmin();
+      allow update, delete: if ownsExistingUserId() || isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if ownsExistingCustomerId() || ownsExistingRestaurant() || isAssignedRider() || isAdmin();
+      allow create: if ownsRequestCustomerId() || isAdmin();
+      allow update: if ownsExistingCustomerId() || ownsExistingRestaurant() || isAssignedRider() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if ownsExistingUserId() || ownsExistingRestaurant() || isAdmin();
+      allow create: if ownsRequestUserId() || isAdmin();
+      allow update: if ownsExistingUserId() || ownsExistingRestaurant() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /carts/{cartId} {
+      allow read, update, delete: if ownsExistingCustomerId() || isAdmin();
+      allow create: if ownsRequestCustomerId() || isAdmin();
+    }
+
+    match /addresses/{addressId} {
+      allow read, update, delete: if ownsExistingUserId() || isAdmin();
+      allow create: if ownsRequestUserId() || isAdmin();
+    }
+
+    match /favorites/{favoriteId} {
+      allow read, update, delete: if ownsExistingUserId() || isAdmin();
+      allow create: if ownsRequestUserId() || isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read, update, delete: if ownsExistingUserId() || isAdmin();
+      allow create: if ownsRequestUserId() || isAdmin();
+    }
+
+    match /settings/{settingsId} {
+      allow read, update, delete: if isAdmin() || ownsExistingUserId();
+      allow create: if isAdmin() || ownsRequestUserId();
+    }
+
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,50 @@
+﻿{
+  "projectName": "YUMMY Restaurant Mobile Application",
+  "projectSlug": "yummy-restaurant-mobile-app",
+  "currentPhase": "9",
+  "phaseName": "Production Features & Service Integration",
+  "version": "1.0.0",
+  "status": "production-services-ready",
+  "createdFor": "Introduction to Mobile App Development Assignment 2",
+  "level": "300",
+  "deadline": "2026-07-07",
+  "sourceOfTruth": "docs/PROJECT_BIBLE.md",
+  "stack": {
+    "framework": "Expo",
+    "runtime": "React Native",
+    "language": "TypeScript",
+    "navigation": "Expo Router",
+    "authentication": "Firebase Email/Password",
+    "database": "Cloud Firestore through typed customer, vendor, admin, and rider repositories/hooks",
+    "storage": "Firebase Storage helpers with Expo environment configuration",
+    "payments": "Dummy payment records only; no real payment gateway",
+    "notifications": "Firestore notification documents only; no push notifications",
+    "sessionPersistence": "AsyncStorage-backed Firebase Auth persistence when available",
+    "environment": "Expo public environment variables",
+    "state": "React Hooks and Context API"
+  },
+  "phaseBoundaries": {
+    "phase9BuildsProductionServiceFoundations": true,
+    "firebaseStorageHelpersImplemented": true,
+    "cartToOrderWorkflowImplemented": true,
+    "dummyPaymentsImplemented": true,
+    "firestoreNotificationsImplemented": true,
+    "realtimeOrderListenersImplemented": true,
+    "riderPlaceholderImplemented": true,
+    "customerModulePreserved": true,
+    "vendorModulePreserved": true,
+    "adminModulePreserved": true,
+    "paymentGatewayImplemented": false,
+    "pushNotificationsImplemented": false,
+    "backendApiCallsImplemented": false,
+    "liveGpsMapIncluded": false,
+    "googleMapsIncluded": false
+  },
+  "requiredQualityCommands": [
+    "npm install",
+    "npm run typecheck",
+    "npx expo config --type public",
+    "npx expo export --platform android",
+    "npx expo start"
+  ]
+}
