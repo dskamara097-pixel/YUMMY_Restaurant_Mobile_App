@@ -8,7 +8,12 @@ import { AppIconName, colors, radius, shadows, spacing } from '@/constants/theme
 
 type CustomerNavItem = {
   label: string;
-  href: '/(customer)/home' | '/(customer)/categories' | '/(customer)/search' | '/(customer)/favorites' | '/(customer)/profile';
+  href:
+    | '/(customer)/home'
+    | '/(customer)/categories'
+    | '/(customer)/search'
+    | '/(customer)/favorites'
+    | '/(customer)/profile';
   icon: AppIconName;
 };
 
@@ -24,21 +29,44 @@ const navItems: CustomerNavItem[] = [
   { label: 'Profile', href: '/(customer)/profile', icon: 'person-outline' },
 ];
 
-export function CustomerBottomNavigation({ active }: CustomerBottomNavigationProps) {
+export function CustomerBottomNavigation({
+  active,
+}: CustomerBottomNavigationProps) {
   return (
     <View style={styles.container}>
       {navItems.map((item) => {
         const selected = item.label.toLowerCase() === active;
 
         return (
-          <Link key={item.href} href={item.href as unknown as Href} asChild>
+          <Link
+            key={item.href}
+            href={item.href as Href}
+            asChild
+          >
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              style={[styles.item, selected && styles.activeItem]}
+              style={StyleSheet.flatten([
+                styles.item,
+                selected ? styles.activeItem : null,
+              ])}
             >
-              <AppIcon name={item.icon} size={20} color={selected ? colors.brand.primary : colors.neutral.muted} />
-              <AppText variant="caption" tone={selected ? 'primary' : 'muted'} numberOfLines={1} adjustsFontSizeToFit>
+              <AppIcon
+                name={item.icon}
+                size={20}
+                color={
+                  selected
+                    ? colors.brand.primary
+                    : colors.neutral.muted
+                }
+              />
+
+              <AppText
+                variant="caption"
+                tone={selected ? 'primary' : 'muted'}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
                 {item.label}
               </AppText>
             </Pressable>
@@ -62,6 +90,7 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     ...shadows.card,
   },
+
   item: {
     alignItems: 'center',
     borderRadius: radius.lg,
@@ -71,6 +100,7 @@ const styles = StyleSheet.create({
     minHeight: 58,
     paddingHorizontal: spacing.xs,
   },
+
   activeItem: {
     backgroundColor: colors.brand.primarySoft,
   },
