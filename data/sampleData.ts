@@ -1,4 +1,4 @@
-import type { AppIconName } from '@/constants/theme';
+﻿import type { AppIconName } from '@/constants/theme';
 import { Admin, FoodCategory, FoodItem, Notification, Order, Payment, Restaurant, User } from '@/types';
 
 export type BrowsingCategory = {
@@ -53,46 +53,12 @@ export const browsingCategories: BrowsingCategory[] = [
 
 export const sampleRestaurants: Restaurant[] = [
   {
-    id: 'restaurant-pizza-palace',
-    name: 'Pizza Palace',
-    category: 'Pizza',
-    description: 'Stone-baked pizzas, cheesy sides, and warm family meals prepared fresh for every order.',
-    logoUrl: 'placeholder://pizza-palace-logo',
-    coverImageUrl: 'placeholder://pizza-palace-cover',
-    rating: 4.8,
-    reviewsCount: 342,
-    deliveryTime: '25-35 min',
-    distance: '1.8 km',
-    deliveryFee: 18,
-    featured: true,
-    popular: true,
-    offerLabel: 'Free drink on combo meals',
-    createdAt: '2026-07-05T00:00:00.000Z',
-  },
-  {
-    id: 'restaurant-burger-hub',
-    name: 'Burger Hub',
-    category: 'Burgers',
-    description: 'Premium grilled burgers, crispy fries, and chilled drinks for quick comfort meals.',
-    logoUrl: 'placeholder://burger-hub-logo',
-    coverImageUrl: 'placeholder://burger-hub-cover',
-    rating: 4.7,
-    reviewsCount: 288,
-    deliveryTime: '20-30 min',
-    distance: '2.1 km',
-    deliveryFee: 15,
-    featured: true,
-    popular: true,
-    offerLabel: 'Save 15% on double burgers',
-    createdAt: '2026-07-05T00:00:00.000Z',
-  },
-  {
     id: 'restaurant-yummy-kitchen',
     name: 'YUMMY Kitchen',
     category: 'Local',
-    description: 'Signature local favorites, rice bowls, soups, and chef specials from the YUMMY team.',
-    logoUrl: 'placeholder://yummy-kitchen-logo',
-    coverImageUrl: 'placeholder://yummy-kitchen-cover',
+    description: 'Taste the tradition. Love every bite.',
+    logoUrl: 'placeholder://restaurant-logo',
+    coverImageUrl: 'placeholder://restaurant-cover',
     rating: 4.9,
     reviewsCount: 510,
     deliveryTime: '30-40 min',
@@ -100,49 +66,15 @@ export const sampleRestaurants: Restaurant[] = [
     deliveryFee: 20,
     featured: true,
     popular: true,
-    offerLabel: 'Lunch bowls from SLE 150',
-    createdAt: '2026-07-05T00:00:00.000Z',
-  },
-  {
-    id: 'restaurant-ocean-seafood',
-    name: 'Ocean Seafood',
-    category: 'Seafood',
-    description: 'Fresh grilled fish, prawns, and coastal plates with bright sauces and seasonal sides.',
-    logoUrl: 'placeholder://ocean-seafood-logo',
-    coverImageUrl: 'placeholder://ocean-seafood-cover',
-    rating: 4.6,
-    reviewsCount: 194,
-    deliveryTime: '35-45 min',
-    distance: '3.4 km',
-    deliveryFee: 24,
-    featured: false,
-    popular: true,
-    createdAt: '2026-07-05T00:00:00.000Z',
-  },
-  {
-    id: 'restaurant-italian-delight',
-    name: 'Italian Delight',
-    category: 'Italian',
-    description: 'Creamy pastas, baked lasagna, garden salads, and classic Italian comfort food.',
-    logoUrl: 'placeholder://italian-delight-logo',
-    coverImageUrl: 'placeholder://italian-delight-cover',
-    rating: 4.5,
-    reviewsCount: 176,
-    deliveryTime: '25-40 min',
-    distance: '2.9 km',
-    deliveryFee: 22,
-    featured: false,
-    popular: false,
-    offerLabel: 'Pasta night special',
+    offerLabel: 'Taste the tradition',
     createdAt: '2026-07-05T00:00:00.000Z',
   },
 ];
-
 export const sampleFoods: FoodItem[] = [
   {
     id: 'food-palace-margherita',
-    restaurantId: 'restaurant-pizza-palace',
-    restaurantName: 'Pizza Palace',
+    restaurantId: 'restaurant-yummy-kitchen',
+    restaurantName: 'YUMMY Kitchen',
     name: 'Palace Margherita Pizza',
     category: 'Pizza',
     description: 'Classic tomato, mozzarella, basil, and extra virgin olive oil on a crisp stone-baked base.',
@@ -162,8 +94,8 @@ export const sampleFoods: FoodItem[] = [
   },
   {
     id: 'food-pepperoni-feast',
-    restaurantId: 'restaurant-pizza-palace',
-    restaurantName: 'Pizza Palace',
+    restaurantId: 'restaurant-yummy-kitchen',
+    restaurantName: 'YUMMY Kitchen',
     name: 'Pepperoni Feast',
     category: 'Pizza',
     description: 'Loaded pepperoni pizza with melted cheese and a rich house tomato sauce.',
@@ -182,8 +114,8 @@ export const sampleFoods: FoodItem[] = [
   },
   {
     id: 'food-hub-classic-burger',
-    restaurantId: 'restaurant-burger-hub',
-    restaurantName: 'Burger Hub',
+    restaurantId: 'restaurant-yummy-kitchen',
+    restaurantName: 'YUMMY Kitchen',
     name: 'Hub Classic Burger',
     category: 'Burgers',
     description: 'Grilled beef patty, cheddar, lettuce, tomato, pickles, and signature house sauce.',
@@ -203,8 +135,8 @@ export const sampleFoods: FoodItem[] = [
   },
   {
     id: 'food-crispy-chicken-burger',
-    restaurantId: 'restaurant-burger-hub',
-    restaurantName: 'Burger Hub',
+    restaurantId: 'restaurant-yummy-kitchen',
+    restaurantName: 'YUMMY Kitchen',
     name: 'Crispy Chicken Burger',
     category: 'Burgers',
     description: 'Golden crispy chicken fillet with slaw, spicy mayo, and soft brioche bun.',
@@ -244,8 +176,8 @@ export const sampleFoods: FoodItem[] = [
   },
   {
     id: 'food-grilled-sea-bass',
-    restaurantId: 'restaurant-ocean-seafood',
-    restaurantName: 'Ocean Seafood',
+    restaurantId: 'restaurant-yummy-kitchen',
+    restaurantName: 'YUMMY Kitchen',
     name: 'Grilled Sea Bass',
     category: 'Seafood',
     description: 'Charcoal-grilled fish with lemon herb sauce, salad, and seasoned rice.',
@@ -264,8 +196,8 @@ export const sampleFoods: FoodItem[] = [
   },
   {
     id: 'food-creamy-alfredo',
-    restaurantId: 'restaurant-italian-delight',
-    restaurantName: 'Italian Delight',
+    restaurantId: 'restaurant-yummy-kitchen',
+    restaurantName: 'YUMMY Kitchen',
     name: 'Creamy Alfredo Pasta',
     category: 'Italian',
     description: 'Fettuccine tossed in creamy parmesan sauce with grilled chicken and herbs.',
@@ -316,23 +248,23 @@ export const sampleSpecialOffers: SpecialOffer[] = [
   },
   {
     id: 'offer-pizza-family',
-    title: 'Pizza Palace Family Deal',
+    title: 'YUMMY Kitchen Family Deal',
     description: 'Shareable pizza combinations with a free chilled drink placeholder.',
-    restaurantId: 'restaurant-pizza-palace',
+    restaurantId: 'restaurant-yummy-kitchen',
     foodId: 'food-palace-margherita',
     label: 'Limited offer',
   },
   {
     id: 'offer-burger-double',
-    title: 'Burger Hub Double Bite',
+    title: 'YUMMY Kitchen Double Bite',
     description: 'A UI-only promo for double burger meals and crispy sides.',
-    restaurantId: 'restaurant-burger-hub',
+    restaurantId: 'restaurant-yummy-kitchen',
     foodId: 'food-hub-classic-burger',
     label: '15% off',
   },
 ];
 
-export const recentSearches = ['Jollof rice', 'Pizza Palace', 'Chicken burger'];
+export const recentSearches = ['Jollof rice', 'YUMMY Kitchen', 'Chicken burger'];
 
 export const popularSearches = ['Seafood', 'Best rated', 'Fast delivery', 'Desserts'];
 
@@ -372,7 +304,7 @@ export const sampleCartItems: SampleCartItem[] = [
     id: 'cart-hub-classic-burger',
     foodId: 'food-hub-classic-burger',
     foodName: 'Hub Classic Burger',
-    restaurantName: 'Burger Hub',
+    restaurantName: 'YUMMY Kitchen',
     imageUrl: 'placeholder://hub-classic-burger',
     unitPrice: 185,
     quantity: 1,
@@ -477,7 +409,7 @@ export const samplePreviousOrders: SamplePreviousOrder[] = [
   },
   {
     id: 'YUM-1039',
-    restaurantName: 'Pizza Palace',
+    restaurantName: 'YUMMY Kitchen',
     foodItems: ['Palace Margherita Pizza', 'Pepperoni Feast'],
     orderDate: 'July 2, 2026',
     totalAmount: 620,
@@ -487,7 +419,7 @@ export const samplePreviousOrders: SamplePreviousOrder[] = [
   },
   {
     id: 'YUM-1026',
-    restaurantName: 'Burger Hub',
+    restaurantName: 'YUMMY Kitchen',
     foodItems: ['Hub Classic Burger', 'Crispy Chicken Burger'],
     orderDate: 'June 28, 2026',
     totalAmount: 390,
@@ -534,7 +466,7 @@ export const sampleCustomerNotifications: SampleCustomerNotification[] = [
   {
     id: 'notification-order-delivered',
     title: 'Order delivered',
-    message: 'Your Pizza Palace order was delivered successfully.',
+    message: 'Your YUMMY Kitchen order was delivered successfully.',
     time: '3 days ago',
     type: 'order',
     read: true,
@@ -653,7 +585,7 @@ export const sampleRestaurantReviews: SampleReview[] = [
   },
   {
     id: 'review-restaurant-pizza-1',
-    targetId: 'restaurant-pizza-palace',
+    targetId: 'restaurant-yummy-kitchen',
     customerName: 'Mabinty Kamara',
     rating: 4.8,
     title: 'Great family deal',
@@ -724,7 +656,7 @@ export const sampleCoupons: SampleCoupon[] = [
     description: 'Static coupon for family pizza bundles.',
     discount: '15% off',
     expiryDate: 'August 5, 2026',
-    restaurantName: 'Pizza Palace',
+    restaurantName: 'YUMMY Kitchen',
   },
 ];
 
@@ -740,10 +672,10 @@ export const sampleEnhancedOffers: SampleOffer[] = [
   },
   {
     id: 'offer-limited-burger',
-    title: 'Burger Hub Double Stack',
+    title: 'YUMMY Kitchen Double Stack',
     description: 'Limited UI-only promotion for double burgers and fries.',
     label: 'Limited offer',
-    restaurantName: 'Burger Hub',
+    restaurantName: 'YUMMY Kitchen',
     expiresIn: '2 days left',
   },
   {
@@ -751,18 +683,18 @@ export const sampleEnhancedOffers: SampleOffer[] = [
     title: 'Weekend Seafood Plate',
     description: 'Restaurant promotion for grilled fish and seasonal sides.',
     label: 'Restaurant promo',
-    restaurantName: 'Ocean Seafood',
+    restaurantName: 'YUMMY Kitchen',
     expiresIn: 'This weekend',
     featured: true,
   },
 ];
 
 export const sampleRecentlyViewed: SampleRecentlyViewed = {
-  restaurants: ['restaurant-yummy-kitchen', 'restaurant-pizza-palace', 'restaurant-burger-hub'],
+  restaurants: ['restaurant-yummy-kitchen', 'restaurant-yummy-kitchen', 'restaurant-yummy-kitchen'],
   foods: ['food-jollof-rice-bowl', 'food-hub-classic-burger', 'food-palace-margherita'],
 };
 
-export const sampleRecommendedRestaurantIds = ['restaurant-yummy-kitchen', 'restaurant-pizza-palace', 'restaurant-ocean-seafood'];
+export const sampleRecommendedRestaurantIds = ['restaurant-yummy-kitchen', 'restaurant-yummy-kitchen', 'restaurant-yummy-kitchen'];
 export const sampleRecommendedFoodIds = ['food-jollof-rice-bowl', 'food-grilled-sea-bass', 'food-creamy-alfredo'];
 export const sampleTrendingFoodIds = ['food-hub-classic-burger', 'food-palace-margherita', 'food-mango-parfait'];
 
@@ -784,3 +716,4 @@ export const sampleSearchSortOptions = [
   'Price High to Low',
   'Newest',
 ];
+

@@ -23,6 +23,7 @@ import { useOffers } from '@/hooks/useOffers';
 import { useRestaurants } from '@/hooks/useRestaurants';
 import { FoodItem, Restaurant } from '@/types';
 import { mapFoodModel, mapOfferModel, mapRestaurantModel } from '@/utils/firestoreAdapters';
+import { getRestaurantLogoSource } from '@/utils/localImages';
 
 function openRestaurant(restaurantId: string) {
   router.push({ pathname: '/(customer)/restaurants/[restaurantId]', params: { restaurantId } } as unknown as Href);
@@ -35,7 +36,7 @@ function openFood(foodId: string) {
 function RestaurantSummaryCard({ restaurant }: { restaurant: Restaurant }) {
   return (
     <Pressable accessibilityRole="button" onPress={() => openRestaurant(restaurant.id)} style={({ pressed }) => [styles.restaurantCard, pressed && styles.pressed]}>
-      <ProfileAvatar name={restaurant.name} size={58} />
+      <ProfileAvatar name={restaurant.name} imageSource={getRestaurantLogoSource(restaurant.logoUrl)} size={58} />
       <View style={styles.restaurantCopy}>
         <View style={styles.cardTitleRow}>
           <AppText variant="bodyStrong" numberOfLines={1}>{restaurant.name}</AppText>
@@ -52,7 +53,7 @@ function RestaurantSummaryCard({ restaurant }: { restaurant: Restaurant }) {
 }
 
 function MealCard({ food }: { food: FoodItem }) {
-  return <FoodCard name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} available={food.availability} onPress={() => openFood(food.id)} onOrderPress={() => openFood(food.id)} />;
+  return <FoodCard name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} available={food.availability} imageUrl={food.imageUrl} onPress={() => openFood(food.id)} onOrderPress={() => openFood(food.id)} />;
 }
 
 export default function CustomerHomeScreen() {
@@ -156,3 +157,4 @@ const styles = StyleSheet.create({
   offerGrid: { gap: spacing.md },
   offerCard: { backgroundColor: colors.neutral.surface, borderColor: colors.neutral.line, borderRadius: radius.lg, borderWidth: 1, gap: spacing.sm, padding: spacing.lg, ...shadows.soft },
 });
+

@@ -1,7 +1,7 @@
 ﻿import type { Href } from 'expo-router';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppBadge } from '@/components/common/AppBadge';
 import { AppDivider } from '@/components/common/AppDivider';
@@ -21,6 +21,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useFoods } from '@/hooks/useFoods';
 import { useRestaurants } from '@/hooks/useRestaurants';
 import { mapFoodModel, mapRestaurantModel } from '@/utils/firestoreAdapters';
+import { getRestaurantLogoSource } from '@/utils/localImages';
 
 function openFood(foodId: string) { router.push({ pathname: '/(customer)/foods/[foodId]', params: { foodId } } as unknown as Href); }
 function openRestaurant(restaurantId: string) { router.push({ pathname: '/(customer)/restaurants/[restaurantId]', params: { restaurantId } } as unknown as Href); }
@@ -64,7 +65,7 @@ export default function SearchScreen() {
       {firstError ? <FriendlyErrorState title="Search unavailable" message={firstError} onRetry={retryAll} /> : null}
       {normalizedQuery ? <View style={styles.section}><SectionHeader title="Suggestions" /><View style={styles.suggestionList}>{suggestions.map((suggestion) => <Pressable key={suggestion} accessibilityRole="button" onPress={() => setQuery(suggestion)} style={styles.suggestionRow}><AppText>{suggestion}</AppText><AppBadge label="Meal" tone="info" /></Pressable>)}</View></View> : null}
       <AppDivider inset />
-      {!isLoading && !firstError && !hasResults ? <EmptyState title="No matches found" message="Try another restaurant, meal, category, filter, or sorting option." icon="search" actionLabel="Clear search" onActionPress={() => setQuery('')} /> : <><View style={styles.section}><SectionHeader title="Restaurant Results" subtitle={`${results.restaurants.length} matches`} /><View style={styles.resultList}>{results.restaurants.map((restaurant) => <Pressable key={restaurant.id} accessibilityRole="button" onPress={() => openRestaurant(restaurant.id)} style={({ pressed }) => [styles.restaurantResult, pressed && styles.pressed]}><View style={styles.logoPlaceholder}><AppText variant="label" tone="inverse" numberOfLines={1}>{restaurant.name.slice(0, 2).toUpperCase()}</AppText></View><View style={styles.resultCopy}><AppText variant="bodyStrong" numberOfLines={1}>{restaurant.name}</AppText><AppText tone="muted" numberOfLines={1}>{restaurant.category} - {restaurant.deliveryTime}</AppText></View><RatingBadge rating={restaurant.rating} /></Pressable>)}</View></View><View style={styles.section}><SectionHeader title="Meal Results" subtitle={`${results.foods.length} matches`} /><View style={styles.resultList}>{results.foods.map((food) => <FoodCard key={food.id} name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} available={food.availability} onPress={() => openFood(food.id)} onOrderPress={() => openFood(food.id)} />)}</View></View></>}
+      {!isLoading && !firstError && !hasResults ? <EmptyState title="No matches found" message="Try another restaurant, meal, category, filter, or sorting option." icon="search" actionLabel="Clear search" onActionPress={() => setQuery('')} /> : <><View style={styles.section}><SectionHeader title="Restaurant Results" subtitle={`${results.restaurants.length} matches`} /><View style={styles.resultList}>{results.restaurants.map((restaurant) => <Pressable key={restaurant.id} accessibilityRole="button" onPress={() => openRestaurant(restaurant.id)} style={({ pressed }) => [styles.restaurantResult, pressed && styles.pressed]}><View style={styles.logoPlaceholder}><Image source={getRestaurantLogoSource(restaurant.logoUrl)} style={styles.logoImage} /></View><View style={styles.resultCopy}><AppText variant="bodyStrong" numberOfLines={1}>{restaurant.name}</AppText><AppText tone="muted" numberOfLines={1}>{restaurant.category} - {restaurant.deliveryTime}</AppText></View><RatingBadge rating={restaurant.rating} /></Pressable>)}</View></View><View style={styles.section}><SectionHeader title="Meal Results" subtitle={`${results.foods.length} matches`} /><View style={styles.resultList}>{results.foods.map((food) => <FoodCard key={food.id} name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} available={food.availability} imageUrl={food.imageUrl} onPress={() => openFood(food.id)} onOrderPress={() => openFood(food.id)} />)}</View></View></>}
       <CustomerBottomNavigation active="search" />
     </ScreenContainer>
   );
@@ -79,6 +80,8 @@ const styles = StyleSheet.create({
   resultList: { gap: spacing.md },
   restaurantResult: { alignItems: 'center', backgroundColor: colors.neutral.surface, borderColor: colors.neutral.line, borderRadius: radius.lg, borderWidth: 1, flexDirection: 'row', gap: spacing.md, padding: spacing.md, ...shadows.soft },
   pressed: { opacity: 0.88 },
-  logoPlaceholder: { alignItems: 'center', backgroundColor: colors.brand.primary, borderRadius: radius.lg, height: 52, justifyContent: 'center', width: 52 },
+  logoPlaceholder: { alignItems: 'center', backgroundColor: colors.brand.primary, borderRadius: radius.lg, height: 52, justifyContent: 'center', overflow: 'hidden', width: 52 },
+  logoImage: { height: '100%', width: '100%' },
   resultCopy: { flex: 1, gap: spacing.xs },
 });
+

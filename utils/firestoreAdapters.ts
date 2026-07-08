@@ -1,7 +1,10 @@
 ﻿import { AddressModel, CategoryModel, CouponModel, FoodModel, NotificationModel, OfferModel, OrderModel, RestaurantModel, ReviewModel, UserModel } from '@/models';
 import { FoodCategory, FoodItem, Restaurant } from '@/types';
+import { getLocalFoodPlaceholder } from '@/utils/localImages';
 
 const defaultCategory: FoodCategory = 'Local';
+const yummyKitchenName = 'YUMMY Kitchen';
+const yummyKitchenDescription = 'Taste the tradition. Love every bite.';
 
 export function formatDeliveryTime(minutes?: number) {
   if (!minutes) return '25-40 min';
@@ -20,11 +23,11 @@ export function mapRestaurantModel(restaurant: RestaurantModel, categories: Cate
 
   return {
     id: restaurant.id,
-    name: restaurant.name,
-    category: categoryName,
-    description: restaurant.description,
-    logoUrl: restaurant.logoUrl ?? '',
-    coverImageUrl: restaurant.coverImageUrl ?? '',
+    name: yummyKitchenName,
+    category: defaultCategory,
+    description: yummyKitchenDescription,
+    logoUrl: restaurant.logoUrl ?? 'placeholder://restaurant-logo',
+    coverImageUrl: restaurant.coverImageUrl ?? 'placeholder://restaurant-cover',
     rating: restaurant.rating,
     reviewsCount: restaurant.reviewsCount,
     deliveryTime: formatDeliveryTime(restaurant.deliveryTimeMinutes),
@@ -44,18 +47,18 @@ export function mapFoodModel(food: FoodModel, restaurants: RestaurantModel[] = [
   return {
     id: food.id,
     restaurantId: food.restaurantId,
-    restaurantName: restaurant?.name ?? 'Restaurant',
+    restaurantName: yummyKitchenName,
     name: food.name,
     category,
     description: food.description,
     price: food.price,
     currency: food.currency,
-    imageUrl: food.imageUrl ?? '',
+    imageUrl: food.imageUrl ?? getLocalFoodPlaceholder(food.name),
     availability: food.available,
     featured: food.featured,
     popular: food.featured,
     recommended: food.featured,
-    rating: restaurant?.rating,
+    rating: restaurant?.rating ?? 4.8,
     deliveryTime: formatDeliveryTime(restaurant?.deliveryTimeMinutes),
     ingredients: food.ingredients,
     createdAt: food.createdAt,
@@ -109,7 +112,7 @@ export function mapOrderModel(order: OrderModel, restaurants: RestaurantModel[] 
 
   return {
     id: order.id,
-    restaurantName: restaurant?.name ?? 'Restaurant',
+    restaurantName: yummyKitchenName,
     foodItems: order.items.map((item) => item.name),
     orderDate: order.createdAt,
     totalAmount: order.total,
@@ -162,4 +165,5 @@ export function mapUserProfile(user: UserModel | null, authFallback: { displayNa
     address: 'Address pending',
   };
 }
+
 

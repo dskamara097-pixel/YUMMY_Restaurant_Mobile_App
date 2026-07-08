@@ -98,7 +98,7 @@ export default function CheckoutScreen() {
               restaurantName={item.restaurantName ?? item.restaurantId}
               unitPrice={item.unitPrice}
               quantity={item.quantity}
-              imageSource={item.imageUrl ? { uri: item.imageUrl } : undefined}
+              imageUrl={item.imageUrl}
             />
           ))}
         </View>
@@ -262,3 +262,4 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
 });
+

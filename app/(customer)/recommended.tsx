@@ -18,6 +18,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useFoods } from '@/hooks/useFoods';
 import { useRestaurants } from '@/hooks/useRestaurants';
 import { mapFoodModel, mapRestaurantModel } from '@/utils/firestoreAdapters';
+import { getRestaurantLogoSource } from '@/utils/localImages';
 
 export default function RecommendedScreen() {
   const restaurantsState = useRestaurants({ filters: [{ field: 'active', value: true }], sort: [{ field: 'rating', direction: 'desc' }] });
@@ -42,11 +43,11 @@ export default function RecommendedScreen() {
       {error ? <FriendlyErrorState title="Recommendations unavailable" message={error} onRetry={retry} /> : null}
       {!loading && !error && restaurants.length === 0 && meals.length === 0 ? <EmptyState title="No recommendations yet" message="Recommended restaurants and meals will appear when Firestore has active menu data." icon="sparkles-outline" /> : null}
       <SectionHeader title="Recommended Restaurants" />
-      <View style={styles.list}>{restaurants.map((restaurant) => <View key={restaurant.id} style={styles.restaurantCard}><ProfileAvatar name={restaurant.name} size={56} /><View style={styles.copy}><AppBadge label="Recommended" tone="primary" icon="sparkles-outline" /><AppText variant="bodyStrong">{restaurant.name}</AppText><RatingBadge rating={restaurant.rating} /></View></View>)}</View>
+      <View style={styles.list}>{restaurants.map((restaurant) => <View key={restaurant.id} style={styles.restaurantCard}><ProfileAvatar name={restaurant.name} imageSource={getRestaurantLogoSource(restaurant.logoUrl)} size={56} /><View style={styles.copy}><AppBadge label="Recommended" tone="primary" icon="sparkles-outline" /><AppText variant="bodyStrong">{restaurant.name}</AppText><RatingBadge rating={restaurant.rating} /></View></View>)}</View>
       <SectionHeader title="Recommended Meals" />
-      <View style={styles.list}>{meals.map((food) => <FoodCard key={food.id} name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} onPress={() => router.push({ pathname: '/(customer)/foods/[foodId]', params: { foodId: food.id } } as unknown as Href)} />)}</View>
+      <View style={styles.list}>{meals.map((food) => <FoodCard key={food.id} name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} imageUrl={food.imageUrl} onPress={() => router.push({ pathname: '/(customer)/foods/[foodId]', params: { foodId: food.id } } as unknown as Href)} />)}</View>
       <SectionHeader title="Trending Dishes" />
-      <View style={styles.list}>{trending.map((food) => <FoodCard key={`trend-${food.id}`} name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} onPress={() => router.push({ pathname: '/(customer)/foods/[foodId]', params: { foodId: food.id } } as unknown as Href)} />)}</View>
+      <View style={styles.list}>{trending.map((food) => <FoodCard key={`trend-${food.id}`} name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} imageUrl={food.imageUrl} onPress={() => router.push({ pathname: '/(customer)/foods/[foodId]', params: { foodId: food.id } } as unknown as Href)} />)}</View>
     </ScreenContainer>
   );
 }
@@ -57,3 +58,4 @@ const styles = StyleSheet.create({
   restaurantCard: { alignItems: 'center', backgroundColor: colors.neutral.surface, borderColor: colors.neutral.line, borderRadius: radius.lg, borderWidth: 1, flexDirection: 'row', gap: spacing.md, padding: spacing.md, ...shadows.soft },
   copy: { flex: 1, gap: spacing.sm },
 });
+

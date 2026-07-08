@@ -1,7 +1,7 @@
 ﻿import type { Href } from 'expo-router';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { QuantityStepper } from '@/components/cart/QuantityStepper';
 import { AppBadge } from '@/components/common/AppBadge';
@@ -24,6 +24,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useFood, useFoods } from '@/hooks/useFoods';
 import { useRestaurants } from '@/hooks/useRestaurants';
 import { mapFoodModel } from '@/utils/firestoreAdapters';
+import { getFoodImageSource } from '@/utils/localImages';
 
 function openFood(foodId: string) {
   router.push({ pathname: '/(customer)/foods/[foodId]', params: { foodId } } as unknown as Href);
@@ -69,12 +70,12 @@ export default function FoodDetailsScreen() {
     <ScreenContainer scroll padded={false} contentStyle={styles.screen}>
       <View style={styles.imageHero}>
         <AppHeader title="Food Details" leftIcon="arrow-back" onLeftPress={() => router.back()} rightIcon="cart-outline" onRightPress={() => router.push('/(customer)/cart' as Href)} />
-        <View style={styles.foodImagePlaceholder}><AppIcon name="fast-food-outline" size={68} color={colors.brand.primary} /></View>
+        <View style={styles.foodImagePlaceholder}><Image source={getFoodImageSource(food.imageUrl || food.name)} style={styles.foodImage} /></View>
       </View>
       <View style={styles.content}>
         <View style={styles.titleRow}>
           <View style={styles.titleCopy}>
-            <AppBadge label={food.restaurantName ?? 'YUMMY Restaurant'} icon="storefront-outline" tone="primary" />
+            <AppBadge label={food.restaurantName ?? 'YUMMY Kitchen'} icon="storefront-outline" tone="primary" />
             <AppText variant="title">{food.name}</AppText>
             <AppText tone="muted">{food.description}</AppText>
           </View>
@@ -82,7 +83,7 @@ export default function FoodDetailsScreen() {
             <AppIcon name={favorite ? 'heart' : 'heart-outline'} color={favorite ? colors.neutral.surface : colors.brand.primary} />
           </Pressable>
         </View>
-        <View style={styles.metaRow}><RatingBadge rating={food.rating ?? 4.5} /><AppBadge label={food.deliveryTime ?? '30-40 min'} icon="time-outline" /><PriceTag amount={food.price} size="lg" /></View>
+        <View style={styles.metaRow}><RatingBadge rating={food.rating ?? 4.8} /><AppBadge label={food.deliveryTime ?? '30-40 min'} icon="time-outline" /><PriceTag amount={food.price} size="lg" /></View>
         <AppDivider inset />
         <View style={styles.section}><SectionHeader title="Ingredients" /><View style={styles.chipRow}>{(food.ingredients ?? []).map((ingredient) => <AppBadge key={ingredient} label={ingredient} />)}</View></View>
         <View style={styles.nutritionCard}><AppIcon name="nutrition-outline" color={colors.semantic.success} /><View style={styles.nutritionCopy}><AppText variant="bodyStrong">Nutrition placeholder</AppText><AppText tone="muted">Nutrition details can be stored in a later menu enrichment phase.</AppText></View></View>
@@ -91,7 +92,7 @@ export default function FoodDetailsScreen() {
         {cartNotice ? <AppBadge label={cartNotice} tone={cartNotice.includes('added') ? 'success' : 'info'} icon="cart-outline" /> : null}
         <AppButton label="View Cart" variant="outline" leftIcon="cart-outline" onPress={() => router.push('/(customer)/cart' as Href)} />
         <AppButton label="View Food Reviews" variant="outline" leftIcon="star-outline" onPress={() => router.push({ pathname: '/(customer)/food-reviews', params: { foodId: food.id } } as unknown as Href)} />
-        <View style={styles.section}><SectionHeader title="Similar Foods" subtitle="Firestore suggestions" /><View style={styles.foodList}>{similarFoods.map((item) => <FoodCard key={item.id} name={item.name} description={item.description} price={item.price} category={item.category} rating={item.rating} available={item.availability} onPress={() => openFood(item.id)} onOrderPress={() => openFood(item.id)} />)}</View></View>
+        <View style={styles.section}><SectionHeader title="Similar Foods" subtitle="Firestore suggestions" /><View style={styles.foodList}>{similarFoods.map((item) => <FoodCard key={item.id} name={item.name} description={item.description} price={item.price} imageUrl={item.imageUrl} category={item.category} rating={item.rating} available={item.availability} onPress={() => openFood(item.id)} onOrderPress={() => openFood(item.id)} />)}</View></View>
       </View>
     </ScreenContainer>
   );
@@ -101,7 +102,8 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: colors.neutral.canvas },
   centeredScreen: { justifyContent: 'center' },
   imageHero: { backgroundColor: colors.brand.primary, gap: spacing.xl, minHeight: 310, padding: spacing.xl, paddingTop: spacing['2xl'] },
-  foodImagePlaceholder: { alignItems: 'center', alignSelf: 'center', backgroundColor: colors.neutral.surface, borderRadius: radius.xl, flex: 1, justifyContent: 'center', maxHeight: 190, width: '78%', ...shadows.card },
+  foodImagePlaceholder: { alignItems: 'center', alignSelf: 'center', backgroundColor: colors.neutral.surface, borderRadius: radius.xl, flex: 1, justifyContent: 'center', maxHeight: 190, overflow: 'hidden', width: '78%', ...shadows.card },
+  foodImage: { height: '100%', width: '100%' },
   content: { gap: spacing.xl, padding: spacing.xl },
   titleRow: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.md },
   titleCopy: { flex: 1, gap: spacing.sm },

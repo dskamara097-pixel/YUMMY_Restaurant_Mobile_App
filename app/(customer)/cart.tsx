@@ -88,7 +88,7 @@ export default function ShoppingCartScreen() {
               restaurantName={item.restaurantName ?? item.restaurantId}
               unitPrice={item.unitPrice}
               quantity={item.quantity}
-              imageSource={item.imageUrl ? { uri: item.imageUrl } : undefined}
+              imageUrl={item.imageUrl}
               onIncrease={() => void cart.updateQuantity(item.foodId, item.quantity + 1)}
               onDecrease={() => void cart.updateQuantity(item.foodId, item.quantity - 1)}
               onRemove={() => void cart.removeItem(item.foodId)}
@@ -163,3 +163,4 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
 });
+

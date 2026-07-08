@@ -17,6 +17,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useFoods } from '@/hooks/useFoods';
 import { useRestaurants } from '@/hooks/useRestaurants';
 import { mapFoodModel, mapRestaurantModel } from '@/utils/firestoreAdapters';
+import { getRestaurantLogoSource } from '@/utils/localImages';
 
 function compareNewest(first?: string, second?: string) {
   return new Date(second ?? '').getTime() - new Date(first ?? '').getTime();
@@ -50,9 +51,9 @@ export default function RecentlyViewedScreen() {
       {error ? <FriendlyErrorState title="Recent items unavailable" message={error} onRetry={retry} /> : null}
       {!loading && !error && restaurants.length === 0 && foods.length === 0 ? <EmptyState title="Nothing viewed yet" message="Recently viewed restaurants and foods will appear when Firestore has discovery data." icon="time-outline" /> : null}
       <SectionHeader title="Restaurants" />
-      <View style={styles.list}>{restaurants.map((restaurant) => <View key={restaurant.id} style={styles.restaurantCard}><ProfileAvatar name={restaurant.name} size={56} /><View style={styles.copy}><AppText variant="bodyStrong">{restaurant.name}</AppText><AppText tone="muted">{restaurant.category} - {restaurant.deliveryTime}</AppText><RatingBadge rating={restaurant.rating} /></View></View>)}</View>
+      <View style={styles.list}>{restaurants.map((restaurant) => <View key={restaurant.id} style={styles.restaurantCard}><ProfileAvatar name={restaurant.name} imageSource={getRestaurantLogoSource(restaurant.logoUrl)} size={56} /><View style={styles.copy}><AppText variant="bodyStrong">{restaurant.name}</AppText><AppText tone="muted">{restaurant.category} - {restaurant.deliveryTime}</AppText><RatingBadge rating={restaurant.rating} /></View></View>)}</View>
       <SectionHeader title="Foods" />
-      <View style={styles.list}>{foods.map((food) => <FoodCard key={food.id} name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} onPress={() => router.push({ pathname: '/(customer)/foods/[foodId]', params: { foodId: food.id } } as unknown as Href)} />)}</View>
+      <View style={styles.list}>{foods.map((food) => <FoodCard key={food.id} name={food.name} description={food.description} price={food.price} category={food.category} rating={food.rating} imageUrl={food.imageUrl} onPress={() => router.push({ pathname: '/(customer)/foods/[foodId]', params: { foodId: food.id } } as unknown as Href)} />)}</View>
     </ScreenContainer>
   );
 }
@@ -63,3 +64,4 @@ const styles = StyleSheet.create({
   restaurantCard: { alignItems: 'center', backgroundColor: colors.neutral.surface, borderColor: colors.neutral.line, borderRadius: radius.lg, borderWidth: 1, flexDirection: 'row', gap: spacing.md, padding: spacing.md, ...shadows.soft },
   copy: { flex: 1, gap: spacing.sm },
 });
+

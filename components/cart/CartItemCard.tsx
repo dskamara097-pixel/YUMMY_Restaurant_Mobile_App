@@ -1,4 +1,4 @@
-import { Image, ImageSourcePropType, Pressable, StyleSheet, View } from 'react-native';
+﻿import { Image, ImageSourcePropType, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppIcon } from '@/components/common/AppIcon';
 import { AppText } from '@/components/common/AppText';
@@ -6,6 +6,7 @@ import { QuantityStepper } from '@/components/cart/QuantityStepper';
 import { PriceTag } from '@/components/food/PriceTag';
 import { colors, layout, radius, shadows, spacing } from '@/constants/theme';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { getFoodImageSource } from '@/utils/localImages';
 
 type CartItemCardProps = {
   name: string;
@@ -13,6 +14,7 @@ type CartItemCardProps = {
   unitPrice: number;
   quantity: number;
   imageSource?: ImageSourcePropType;
+  imageUrl?: string;
   onIncrease?: () => void;
   onDecrease?: () => void;
   onRemove?: () => void;
@@ -24,16 +26,18 @@ export function CartItemCard({
   unitPrice,
   quantity,
   imageSource,
+  imageUrl,
   onIncrease,
   onDecrease,
   onRemove,
 }: CartItemCardProps) {
   const subtotal = unitPrice * quantity;
+  const resolvedImageSource = imageSource ?? getFoodImageSource(imageUrl ?? name);
 
   return (
     <View style={styles.card}>
       <View style={styles.imageWrap}>
-        {imageSource ? <Image source={imageSource} style={styles.image} /> : <AppIcon name="fast-food-outline" color={colors.brand.primary} size={30} />}
+        <Image source={resolvedImageSource} style={styles.image} />
       </View>
       <View style={styles.content}>
         <View style={styles.headerRow}>

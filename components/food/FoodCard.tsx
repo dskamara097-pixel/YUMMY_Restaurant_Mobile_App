@@ -1,18 +1,19 @@
-import { Image, ImageSourcePropType, Pressable, StyleSheet, View } from 'react-native';
+﻿import { Image, ImageSourcePropType, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppBadge } from '@/components/common/AppBadge';
 import { AppButton } from '@/components/common/AppButton';
-import { AppIcon } from '@/components/common/AppIcon';
 import { AppText } from '@/components/common/AppText';
 import { PriceTag } from '@/components/food/PriceTag';
 import { RatingBadge } from '@/components/food/RatingBadge';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
+import { getFoodImageSource } from '@/utils/localImages';
 
 type FoodCardProps = {
   name: string;
   description: string;
   price: number;
   imageSource?: ImageSourcePropType;
+  imageUrl?: string;
   category?: string;
   rating?: number;
   available?: boolean;
@@ -25,16 +26,19 @@ export function FoodCard({
   description,
   price,
   imageSource,
+  imageUrl,
   category,
   rating,
   available = true,
   onPress,
   onOrderPress,
 }: FoodCardProps) {
+  const resolvedImageSource = imageSource ?? getFoodImageSource(imageUrl ?? name);
+
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <View style={styles.imageWrap}>
-        {imageSource ? <Image source={imageSource} style={styles.image} /> : <AppIcon name="restaurant-outline" size={36} color={colors.brand.primary} />}
+        <Image source={resolvedImageSource} style={styles.image} />
         <View style={styles.topBadges}>
           {category ? <AppBadge label={category} tone="primary" /> : null}
           {!available ? <AppBadge label="Unavailable" tone="danger" /> : null}
