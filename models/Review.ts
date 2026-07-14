@@ -9,6 +9,8 @@
   helpfulCount: number;
   hidden?: boolean;
   moderationStatus?: 'visible' | 'hidden';
+  vendorReply?: string;
+  vendorReplyAt?: string;
   createdAt: string;
   updatedAt?: string;
 }

@@ -97,10 +97,18 @@ export function mapOfferModel(offer: OfferModel) {
 export function mapOrderStatus(status: OrderModel['status']) {
   const statusMap: Record<OrderModel['status'], string> = {
     pending: 'Pending',
+    pendingPaymentVerification: 'Pending Payment Verification',
+    paymentConfirmed: 'Payment Confirmed',
+    paymentRejected: 'Payment Rejected',
     paymentReceived: 'Payment Received',
+    accepted: 'Accepted',
     preparing: 'Preparing',
     ready: 'Ready',
+    waitingForRider: 'Waiting for Rider',
+    pickedUp: 'Picked Up',
+    outForDelivery: 'Out for Delivery',
     delivered: 'Delivered',
+    completed: 'Completed',
     cancelled: 'Cancelled',
   };
 

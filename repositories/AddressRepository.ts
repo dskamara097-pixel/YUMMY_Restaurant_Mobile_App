@@ -8,7 +8,9 @@ export class AddressRepository extends FirestoreRepository<AddressModel> {
   }
 
   listByUser(userId: string) {
-    return this.list({ filters: [{ field: 'userId', value: userId }], sort: [{ field: 'isDefault', direction: 'desc' }, { field: 'createdAt', direction: 'desc' }] });
+    return this.list({ filters: [{ field: 'userId', value: userId }] })
+      .then((addresses) => addresses.sort((left, right) => Number(right.isDefault) - Number(left.isDefault)
+        || new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()));
   }
 }
 

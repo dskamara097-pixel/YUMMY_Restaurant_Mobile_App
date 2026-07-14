@@ -32,9 +32,12 @@ export default function VendorProfileScreen() {
         <View style={styles.profileCard}>
           <ProfileAvatar name={restaurant.name} size={76} />
           <View style={styles.profileCopy}>
-            <AppBadge label={restaurant.active ? 'Visible to customers' : 'Hidden'} tone={restaurant.active ? 'success' : 'warning'} icon="storefront-outline" />
+            <AppBadge label={restaurant.active ? 'OPEN - Visible to customers' : 'CLOSED - Browsing only'} tone={restaurant.active ? 'success' : 'warning'} icon="storefront-outline" />
             <AppText variant="title">{restaurant.name}</AppText>
             <AppText tone="muted">{restaurant.description}</AppText>
+            <AppText tone="muted">{restaurant.phone ?? 'Phone pending'} - {restaurant.email ?? 'Email pending'}</AppText>
+            <AppText tone="muted">{restaurant.address ?? 'Address pending'}</AppText>
+            <AppText tone="muted">Hours: {restaurant.openingHours ?? '08:00'} - {restaurant.closingHours ?? '22:00'}</AppText>
           </View>
         </View>
         <View style={styles.statsGrid}>
@@ -43,7 +46,7 @@ export default function VendorProfileScreen() {
           <VendorStatCard label="Rating" value={`${restaurant.rating.toFixed(1)}`} icon="star-outline" tone="warning" />
           <VendorStatCard label="Reviews" value={`${restaurant.reviewsCount}`} icon="chatbubble-outline" tone="neutral" />
         </View>
-        <View style={styles.section}><SectionHeader title="Profile Actions" /><AppButton label="Edit Restaurant Profile" leftIcon="create-outline" onPress={() => router.push('/(vendor)/edit-profile' as Href)} /><AppButton label={restaurant.active ? 'Hide Restaurant' : 'Activate Restaurant'} variant="outline" leftIcon={restaurant.active ? 'eye-off-outline' : 'eye-outline'} onPress={restaurantState.toggleActive} /></View>
+        <View style={styles.section}><SectionHeader title="Profile Actions" /><AppButton label="Edit Restaurant Profile" leftIcon="create-outline" onPress={() => router.push('/(vendor)/edit-profile' as Href)} /><AppButton label={restaurant.active ? 'Mark Closed' : 'Mark Open'} variant="outline" leftIcon={restaurant.active ? 'eye-off-outline' : 'eye-outline'} onPress={restaurantState.toggleActive} /></View>
       </> : null}
       <VendorBottomNavigation active="dashboard" />
     </ScreenContainer>

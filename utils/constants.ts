@@ -1,5 +1,6 @@
 ﻿export const FIRESTORE_COLLECTIONS = {
   users: 'users',
+  vendors: 'vendors',
   restaurants: 'restaurants',
   foods: 'foods',
   categories: 'categories',

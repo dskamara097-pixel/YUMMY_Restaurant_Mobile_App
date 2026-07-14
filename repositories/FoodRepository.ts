@@ -12,7 +12,8 @@ export class FoodRepository extends FirestoreRepository<FoodModel> {
   }
 
   listAvailable() {
-    return this.list({ filters: [{ field: 'available', value: true }], sort: [{ field: 'name' }] });
+    return this.list({ filters: [{ field: 'available', value: true }] })
+      .then((foods) => foods.sort((left, right) => left.name.localeCompare(right.name)));
   }
 
   listFeatured() {
@@ -20,15 +21,18 @@ export class FoodRepository extends FirestoreRepository<FoodModel> {
   }
 
   listByRestaurant(restaurantId: string) {
-    return this.list({ filters: [{ field: 'restaurantId', value: restaurantId }], sort: [{ field: 'name' }] });
+    return this.list({ filters: [{ field: 'restaurantId', value: restaurantId }] })
+      .then((foods) => foods.sort((left, right) => left.name.localeCompare(right.name)));
   }
 
   listAvailableByRestaurant(restaurantId: string) {
-    return this.list({ filters: [{ field: 'restaurantId', value: restaurantId }, { field: 'available', value: true }], sort: [{ field: 'name' }] });
+    return this.listByRestaurant(restaurantId)
+      .then((foods) => foods.filter((food) => food.available));
   }
 
   listByCategory(categoryId: string) {
-    return this.list({ filters: [{ field: 'categoryId', value: categoryId }], sort: [{ field: 'name' }] });
+    return this.list({ filters: [{ field: 'categoryId', value: categoryId }] })
+      .then((foods) => foods.sort((left, right) => left.name.localeCompare(right.name)));
   }
 
   search(searchText: string) {

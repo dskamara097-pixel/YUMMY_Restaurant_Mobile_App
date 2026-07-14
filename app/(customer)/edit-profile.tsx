@@ -16,6 +16,7 @@ import { mapUserProfile } from '@/utils/firestoreAdapters';
 
 type ProfileForm = {
   fullName: string;
+  username: string;
   phone: string;
   email: string;
   address: string;
@@ -26,6 +27,7 @@ type ProfileErrors = Partial<Record<keyof ProfileForm, string>>;
 
 const emptyProfileForm: ProfileForm = {
   fullName: '',
+  username: '',
   phone: '',
   email: '',
   address: '',
@@ -35,6 +37,7 @@ const emptyProfileForm: ProfileForm = {
 function validateProfile(values: ProfileForm) {
   const errors: ProfileErrors = {};
   if (!values.fullName.trim()) errors.fullName = 'Full name is required.';
+  if (!values.username.trim()) errors.username = 'Username is required.';
   if (!values.phone.trim()) errors.phone = 'Phone number is required.';
   if (!values.address.trim()) errors.address = 'Delivery address is required.';
   if (values.email.trim() && !isValidEmail(values.email)) errors.email = 'Enter a valid email address.';
@@ -67,6 +70,7 @@ export default function EditProfileScreen() {
 
     setValues({
       fullName: profile.fullName === 'YUMMY Customer' ? '' : profile.fullName,
+      username: profileState.data?.username ?? '',
       phone: profile.phone === 'Phone pending' ? '' : profile.phone,
       email: profile.email === 'Email pending' ? '' : profile.email,
       address: addressText,
@@ -97,8 +101,10 @@ export default function EditProfileScreen() {
       });
       await profileState.saveProfile({
         fullName: values.fullName,
+        username: values.username,
         phone: values.phone,
         email: values.email,
+        address: values.address,
       });
       await addressesState.saveDefaultAddress({
         recipientName: values.fullName,
@@ -118,6 +124,7 @@ export default function EditProfileScreen() {
 
       <View style={styles.form}>
         <AppInput label="Full name" value={values.fullName} onChangeText={(value) => updateField('fullName', value)} leftIcon="person-outline" error={errors.fullName} />
+        <AppInput label="Username" value={values.username} onChangeText={(value) => updateField('username', value)} leftIcon="at-outline" autoCapitalize="none" error={errors.username} helperText="Saved to the Firestore user profile." />
         <AppInput label="Phone number" value={values.phone} onChangeText={(value) => updateField('phone', value)} leftIcon="call-outline" keyboardType="phone-pad" error={errors.phone} helperText="Saved to the Firestore user profile and default address." />
         <AppInput label="Email" value={values.email} onChangeText={(value) => updateField('email', value)} leftIcon="mail-outline" keyboardType="email-address" autoCapitalize="none" error={errors.email} helperText="Saved to Firestore profile. Firebase Auth email changes require re-authentication." />
         <AppInput label="Photo URL" value={values.photoURL} onChangeText={(value) => updateField('photoURL', value)} leftIcon="image-outline" autoCapitalize="none" error={errors.photoURL} helperText="Updates Firebase Auth photoURL only. No Storage upload in this phase." />

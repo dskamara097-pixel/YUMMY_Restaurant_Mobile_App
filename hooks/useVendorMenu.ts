@@ -20,9 +20,16 @@ export type SaveVendorFoodInput = {
   description: string;
   categoryId: string;
   price: number;
+  imageUrl?: string;
+  discount?: number;
+  preparationTimeMinutes?: number;
+  calories?: number;
   ingredients: string[];
   available: boolean;
   featured: boolean;
+  popular?: boolean;
+  archived?: boolean;
+  stockStatus?: 'inStock' | 'lowStock' | 'outOfStock';
 };
 
 export function useVendorCategories(restaurantId?: string) {
@@ -70,9 +77,16 @@ export function useVendorFoods(restaurantId?: string) {
       categoryId: input.categoryId,
       price: input.price,
       currency: 'SLE' as const,
+      imageUrl: input.imageUrl?.trim() || undefined,
+      discount: input.discount ?? 0,
+      preparationTimeMinutes: input.preparationTimeMinutes,
+      calories: input.calories,
       ingredients: input.ingredients,
       available: input.available,
       featured: input.featured,
+      popular: input.popular ?? false,
+      archived: input.archived ?? false,
+      stockStatus: input.stockStatus ?? 'inStock' as const,
       updatedAt: timestamp,
     };
 
@@ -91,5 +105,10 @@ export function useVendorFoods(restaurantId?: string) {
     await retry();
   }, [retry]);
 
-  return { ...state, saveFood, deleteFood, toggleAvailability };
+  const archiveFood = useCallback(async (food: FoodModel) => {
+    await foodRepository.update(food.id, { archived: !food.archived, available: food.archived ? food.available : false });
+    await retry();
+  }, [retry]);
+
+  return { ...state, saveFood, deleteFood, toggleAvailability, archiveFood };
 }

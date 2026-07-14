@@ -13,6 +13,11 @@ export interface RestaurantModel {
   deliveryTimeMinutes: number;
   deliveryFee: number;
   active: boolean;
+  phone?: string;
+  email?: string;
+  address?: string;
+  openingHours?: string;
+  closingHours?: string;
   status?: RestaurantStatus;
   rejectionReason?: string;
   createdAt: string;

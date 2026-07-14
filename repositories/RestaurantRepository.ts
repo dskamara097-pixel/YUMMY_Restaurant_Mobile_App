@@ -12,11 +12,13 @@ export class RestaurantRepository extends FirestoreRepository<RestaurantModel> {
   }
 
   listActive() {
-    return this.list({ filters: [{ field: 'active', value: true }], sort: [{ field: 'rating', direction: 'desc' }] });
+    return this.list({ filters: [{ field: 'active', value: true }] })
+      .then((restaurants) => restaurants.sort((left, right) => right.rating - left.rating));
   }
 
   listByStatus(status: RestaurantStatus) {
-    return this.list({ filters: [{ field: 'status', value: status }], sort: [{ field: 'createdAt', direction: 'desc' }] });
+    return this.list({ filters: [{ field: 'status', value: status }] })
+      .then((restaurants) => restaurants.sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()));
   }
 
   getByOwnerId(ownerId: string) {

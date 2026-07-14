@@ -12,4 +12,5 @@ export type { RestaurantModel } from '@/models/Restaurant';
 export type { ReviewModel } from '@/models/Review';
 export type { SettingsModel } from '@/models/Settings';
 export type { UserModel, UserRole, UserStatus } from '@/models/User';
+export type { VendorModel } from '@/models/Vendor';
 

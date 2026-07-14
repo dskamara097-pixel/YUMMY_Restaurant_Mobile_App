@@ -16,7 +16,7 @@ import { spacing } from '@/constants/theme';
 import { getVendorOrderStatusLabel, useVendorOrder, useVendorOrders, vendorOrderStatuses } from '@/hooks/useVendorOrders';
 import { useVendorRestaurant } from '@/hooks/useVendorRestaurant';
 
-const timelineLabels = ['Pending', 'Payment Received', 'Preparing', 'Ready', 'Delivered'];
+const timelineLabels = ['Pending', 'Accepted', 'Preparing', 'Ready', 'Waiting for Rider', 'Picked Up', 'Delivered'];
 
 function timelineSteps(currentLabel: string) {
   const currentIndex = timelineLabels.indexOf(currentLabel);

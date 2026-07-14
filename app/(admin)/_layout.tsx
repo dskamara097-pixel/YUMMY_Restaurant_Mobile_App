@@ -10,6 +10,7 @@ export default function AdminLayout() {
       <Stack.Screen name="profile" />
       <Stack.Screen name="users" />
       <Stack.Screen name="customers" />
+      <Stack.Screen name="customers/[customerId]" />
       <Stack.Screen name="vendors" />
       <Stack.Screen name="riders" />
       <Stack.Screen name="restaurant-approval" />

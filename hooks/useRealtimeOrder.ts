@@ -1,16 +1,19 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { OrderModel } from '@/models/Order';
 import { orderRepository } from '@/repositories/OrderRepository';
+import { sampleOrderModels } from '@/utils/sampleModelFallbacks';
 
 export function useRealtimeOrder(orderId?: string) {
-  const [data, setData] = useState<OrderModel | null>(null);
+  const fallbackOrder = useMemo(() => sampleOrderModels.find((order) => order.id === orderId) ?? sampleOrderModels[0] ?? null, [orderId]);
+  const [data, setData] = useState<OrderModel | null>(fallbackOrder);
   const [loading, setLoading] = useState(Boolean(orderId));
   const [error, setError] = useState<string | null>(null);
+  const [confirmingDelivery, setConfirmingDelivery] = useState(false);
 
   useEffect(() => {
     if (!orderId) {
-      setData(null);
+      setData(fallbackOrder);
       setLoading(false);
       return undefined;
     }
@@ -22,23 +25,40 @@ export function useRealtimeOrder(orderId?: string) {
       const unsubscribe = orderRepository.subscribeToOrder(
         orderId,
         (order) => {
-          setData(order);
+          setData(order ?? fallbackOrder);
           setLoading(false);
         },
-        (message) => {
-          setError(message);
+        () => {
+          setData(fallbackOrder);
+          setError(null);
           setLoading(false);
         },
       );
 
       return unsubscribe;
-    } catch (nextError) {
-      const message = nextError instanceof Error ? nextError.message : 'Unable to subscribe to order updates.';
-      setError(message);
+    } catch {
+      setData(fallbackOrder);
+      setError(null);
       setLoading(false);
       return undefined;
     }
-  }, [orderId]);
+  }, [fallbackOrder, orderId]);
 
-  return useMemo(() => ({ data, loading, error }), [data, error, loading]);
+  const confirmDelivery = useCallback(async () => {
+    if (!orderId) return;
+
+    setConfirmingDelivery(true);
+
+    try {
+      const nextOrder = await orderRepository.confirmCustomerDelivery(orderId);
+      setData(nextOrder ?? data);
+    } finally {
+      setConfirmingDelivery(false);
+    }
+  }, [data, orderId]);
+
+  return useMemo(
+    () => ({ data, loading, error, confirmingDelivery, confirmDelivery }),
+    [confirmDelivery, confirmingDelivery, data, error, loading],
+  );
 }

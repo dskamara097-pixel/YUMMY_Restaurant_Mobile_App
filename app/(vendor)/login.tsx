@@ -12,6 +12,7 @@ import { PasswordInput } from '@/components/forms/PasswordInput';
 import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { userRepository } from '@/repositories/UserRepository';
 import { isValidEmail } from '@/utils/authValidation';
 
 export default function VendorLoginScreen() {
@@ -25,7 +26,12 @@ export default function VendorLoginScreen() {
     if (!isValidEmail(email)) { setNotice('Enter a valid vendor email address.'); return; }
     if (password.length < 8) { setNotice('Password must be at least 8 characters.'); return; }
     try {
-      await auth.login({ email: email.trim(), password });
+      const user = await auth.login({ email: email.trim(), password });
+      const profile = user ? await userRepository.getById(user.uid) : null;
+      if (profile?.role !== 'vendor') {
+        setNotice('This account is not registered as a restaurant vendor.');
+        return;
+      }
       router.replace('/(vendor)/dashboard' as Href);
     } catch {
       setNotice('Vendor login failed. Check your Firebase Auth account and try again.');
@@ -46,6 +52,8 @@ export default function VendorLoginScreen() {
         {auth.error ? <AppBadge label={auth.error} tone="danger" icon="alert-circle-outline" /> : null}
         {notice ? <AppBadge label={notice} tone="warning" icon="warning-outline" /> : null}
         <AppButton label="Login as Vendor" leftIcon="log-in-outline" loading={auth.loading} onPress={handleLogin} />
+        <AppButton label="Create vendor account" variant="outline" leftIcon="storefront-outline" onPress={() => router.push('/(vendor)/register' as Href)} />
+        <AppButton label="Forgot password" variant="ghost" leftIcon="mail-outline" onPress={() => router.push('/(vendor)/forgot-password' as Href)} />
         <AppButton label="Back to Customer App" variant="ghost" leftIcon="arrow-back" onPress={() => router.replace('/(auth)/login' as Href)} />
       </View>
     </ScreenContainer>

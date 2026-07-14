@@ -11,6 +11,7 @@ import { SearchBar } from '@/components/forms/SearchBar';
 import { AdminBottomNavigation } from '@/components/admin/AdminBottomNavigation';
 import { AdminActionCard, AdminEntityCard, AdminStatCard } from '@/components/admin/AdminCards';
 import { AdminGate } from '@/components/admin/AdminGate';
+import { AdminLogoutAction } from '@/components/admin/AdminLogoutAction';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { FriendlyErrorState } from '@/components/feedback/FriendlyErrorState';
 import { LoadingState } from '@/components/feedback/LoadingState';
@@ -18,15 +19,16 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { spacing } from '@/constants/theme';
-import { OrderStatusModel } from '@/models/Order';
-import { UserRole, UserStatus } from '@/models/User';
+import { OrderModel, OrderStatusModel } from '@/models/Order';
+import { PaymentModel } from '@/models/Payment';
+import { UserModel, UserRole, UserStatus } from '@/models/User';
 import { useAdminCategories, useAdminFoodFilters, useAdminFoods } from '@/hooks/useAdminCatalog';
 import { useAdminDashboard, useAnalytics, useReports } from '@/hooks/useAdminAnalytics';
 import { adminOrderStatuses, useAdminOrderFilters, useAdminOrders } from '@/hooks/useAdminOrders';
 import { useAdminCoupons, useAdminOffers } from '@/hooks/useAdminPromotions';
 import { useAdminRestaurantFilters, useAdminRestaurants } from '@/hooks/useAdminRestaurants';
 import { useAdminReviews } from '@/hooks/useAdminReviews';
-import { useAdminUserFilters, useAdminUsers } from '@/hooks/useAdminUsers';
+import { CustomerSummary, useAdminCustomerSummaries, useAdminUserFilters, useAdminUsers } from '@/hooks/useAdminUsers';
 import { useSettings } from '@/hooks/useAdminSettings';
 import { getVendorOrderStatusLabel } from '@/hooks/useVendorOrders';
 import { formatCurrency } from '@/utils/formatCurrency';
@@ -34,23 +36,119 @@ import { formatCurrency } from '@/utils/formatCurrency';
 const roles: Array<UserRole | 'all'> = ['all', 'customer', 'vendor', 'rider', 'admin'];
 const statuses: Array<UserStatus | 'all'> = ['all', 'active', 'pending', 'disabled'];
 
+function paymentMethodLabel(method?: string) {
+  if (method === 'cashOnDelivery') return 'Cash on Delivery';
+  if (method === 'dummyMobileMoney') return 'Dummy Mobile Money';
+  if (method === 'dummyCard') return 'Dummy Card Payment';
+  return 'Payment pending';
+}
+
+function paymentStatusLabel(status?: string) {
+  if (status === 'awaitingApproval') return 'Awaiting Approval';
+  if (status === 'paid') return 'Paid';
+  if (status === 'rejected') return 'Rejected';
+  if (status === 'failed') return 'Failed';
+  if (status === 'refunded') return 'Refunded';
+  return 'Pending';
+}
+
+function paymentTone(status?: string) {
+  if (status === 'paid') return 'success' as const;
+  if (status === 'rejected' || status === 'failed') return 'danger' as const;
+  if (status === 'refunded') return 'warning' as const;
+  return 'info' as const;
+}
+
+function orderTone(status: OrderStatusModel) {
+  if (status === 'completed' || status === 'delivered') return 'success' as const;
+  if (status === 'cancelled' || status === 'paymentRejected') return 'danger' as const;
+  if (status === 'paymentConfirmed' || status === 'outForDelivery') return 'info' as const;
+  return 'warning' as const;
+}
+
+function maskedPhone(value?: string) {
+  if (!value) return 'Mobile number pending';
+  const lastTwo = value.slice(-2);
+  return `${'*'.repeat(Math.max(0, value.length - 2))}${lastTwo}`;
+}
+
+function paymentDetailText(payment?: PaymentModel) {
+  if (!payment) return 'Payment document pending';
+  if (payment.method === 'dummyMobileMoney') {
+    return `${payment.provider ?? 'Provider pending'} - ${maskedPhone(payment.mobileNumber)} - ${formatCurrency(payment.amount)} - Ref ${payment.transactionReference}`;
+  }
+  if (payment.method === 'dummyCard') {
+    return `Card ending ${payment.cardLast4 ?? '----'} - ${formatCurrency(payment.amount)} - Ref ${payment.transactionReference}`;
+  }
+  return `${formatCurrency(payment.amount)} - Ref ${payment.transactionReference}`;
+}
+
+function orderPaymentSummary(order: OrderModel, payment?: PaymentModel) {
+  return `${paymentMethodLabel(payment?.method)} - ${paymentStatusLabel(payment?.status ?? order.paymentStatus)}`;
+}
+
+function userStatusLabel(status?: UserStatus) {
+  if (status === 'disabled') return 'Suspended';
+  if (status === 'pending') return 'Pending';
+  return 'Active';
+}
+
+function userStatusTone(status?: UserStatus) {
+  if (status === 'disabled') return 'danger' as const;
+  if (status === 'pending') return 'warning' as const;
+  return 'success' as const;
+}
+
+function safeUserText(value: string | undefined, fallback: string) {
+  return value?.trim() || fallback;
+}
+
+function formatDate(value?: string) {
+  if (!value) return 'Registration date pending';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Registration date pending' : date.toLocaleDateString();
+}
+
+function customerSummaryText(summary?: CustomerSummary) {
+  return `${summary?.orderCount ?? 0} orders - ${formatCurrency(summary?.totalSpending ?? 0)} spent`;
+}
+
+function customerSubtitle(user: UserModel) {
+  return `${safeUserText(user.username, 'Username pending')} - ${safeUserText(user.email, 'Email pending')}`;
+}
+
+function customerMeta(user: UserModel, summary?: CustomerSummary) {
+  return `${safeUserText(user.phone, 'Phone pending')} - ${safeUserText(user.address, 'Address pending')} - ${customerSummaryText(summary)}`;
+}
+
 export function AdminDashboardScreen() {
   const dashboard = useAdminDashboard();
   const data = dashboard.data;
-  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Admin Dashboard" subtitle="Platform control center" leftIcon="arrow-back" onLeftPress={() => router.back()} />{dashboard.loading ? <LoadingState title="Loading admin dashboard" message="Fetching platform metrics." /> : null}{dashboard.error ? <FriendlyErrorState title="Dashboard unavailable" message={dashboard.error} onRetry={dashboard.retry} /> : null}<View style={styles.statsGrid}><AdminStatCard label="Users" value={`${data.totalUsers}`} icon="people-outline" /><AdminStatCard label="Restaurants" value={`${data.totalRestaurants}`} icon="storefront-outline" tone="info" /><AdminStatCard label="Orders" value={`${data.totalOrders}`} icon="receipt-outline" tone="warning" /><AdminStatCard label="Revenue" value={formatCurrency(data.revenueSummary)} icon="cash-outline" tone="success" /></View><View style={styles.section}><SectionHeader title="Administration" subtitle="Firestore-backed management" /><AdminActionCard title="User Management" subtitle="Customers, vendors, riders, and admins" icon="people-outline" badge={`${data.totalUsers}`} onPress={() => router.push('/(admin)/users' as Href)} /><AdminActionCard title="Restaurant Approval" subtitle="Approve, reject, suspend, or restore restaurants" icon="storefront-outline" badge={`${data.totalRestaurants}`} onPress={() => router.push('/(admin)/restaurant-approval' as Href)} /><AdminActionCard title="Orders Management" subtitle="View, search, filter, and update order status" icon="receipt-outline" badge={`${data.pendingOrders} pending`} onPress={() => router.push('/(admin)/orders' as Href)} /><AdminActionCard title="Content Moderation" subtitle="Foods, categories, reviews, coupons, and offers" icon="shield-checkmark-outline" onPress={() => router.push('/(admin)/reviews' as Href)} /><AdminActionCard title="Reports & Analytics" subtitle="Platform summary and operational analytics" icon="analytics-outline" onPress={() => router.push('/(admin)/analytics' as Href)} /></View><AppBadge label="No payment gateway, Storage uploads, push notifications, APIs, GPS, maps, or live tracking added." tone="info" icon="information-circle-outline" /><AdminBottomNavigation active="dashboard" /></ScreenContainer></AdminGate>;
+  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Admin Dashboard" subtitle="Platform control center" leftIcon="arrow-back" onLeftPress={() => router.back()} />{dashboard.loading ? <LoadingState title="Loading admin dashboard" message="Fetching platform metrics." /> : null}{dashboard.error ? <FriendlyErrorState title="Dashboard unavailable" message={dashboard.error} onRetry={dashboard.retry} /> : null}<View style={styles.statsGrid}><AdminStatCard label="Customers" value={`${data.totalCustomers}`} icon="people-outline" /><AdminStatCard label="Vendors" value={`${data.totalVendors}`} icon="storefront-outline" tone="info" /><AdminStatCard label="Riders" value={`${data.totalRiders}`} icon="bicycle-outline" tone="warning" /><AdminStatCard label="Restaurants" value={`${data.totalRestaurants}`} icon="restaurant-outline" tone="info" /><AdminStatCard label="Foods" value={`${data.totalFoods}`} icon="fast-food-outline" /><AdminStatCard label="Orders" value={`${data.totalOrders}`} icon="receipt-outline" tone="warning" /><AdminStatCard label="Payment Approvals" value={`${data.pendingPaymentApprovals}`} icon="card-outline" tone="warning" /><AdminStatCard label="Preparing" value={`${data.ordersPreparing}`} icon="flame-outline" tone="warning" /><AdminStatCard label="Ready" value={`${data.ordersReady}`} icon="checkmark-circle-outline" tone="info" /><AdminStatCard label="Out for Delivery" value={`${data.ordersOutForDelivery}`} icon="bicycle-outline" tone="info" /><AdminStatCard label="Delivered" value={`${data.deliveredOrders}`} icon="bag-check-outline" tone="success" /><AdminStatCard label="Completed" value={`${data.completedOrders}`} icon="shield-checkmark-outline" tone="success" /><AdminStatCard label="Cancelled" value={`${data.cancelledOrders}`} icon="close-circle-outline" tone="danger" /><AdminStatCard label="Revenue" value={formatCurrency(data.revenueSummary)} icon="cash-outline" tone="success" /></View><View style={styles.section}><SectionHeader title="Administration" subtitle="Firestore-backed management" /><AdminActionCard title="Customer Management" subtitle="View, search, suspend, and reactivate customers" icon="people-outline" badge={`${data.totalCustomers}`} onPress={() => router.push('/(admin)/customers' as Href)} /><AdminActionCard title="User Management" subtitle="Customers, vendors, riders, and admins" icon="people-outline" badge={`${data.totalUsers}`} onPress={() => router.push('/(admin)/users' as Href)} /><AdminActionCard title="Restaurant Approval" subtitle="Approve, reject, suspend, or restore restaurants" icon="storefront-outline" badge={`${data.totalRestaurants}`} onPress={() => router.push('/(admin)/restaurant-approval' as Href)} /><AdminActionCard title="Orders Management" subtitle="View, search, filter, and update order status" icon="receipt-outline" badge={`${data.pendingOrders} pending`} onPress={() => router.push('/(admin)/orders' as Href)} /><AdminActionCard title="Payment Approvals" subtitle="Review dummy mobile money and card submissions" icon="card-outline" badge={`${data.pendingPaymentApprovals}`} onPress={() => router.push('/(admin)/payments' as Href)} /><AdminActionCard title="Content Moderation" subtitle="Foods, categories, reviews, coupons, and offers" icon="shield-checkmark-outline" onPress={() => router.push('/(admin)/reviews' as Href)} /><AdminActionCard title="Reports & Analytics" subtitle="Platform summary and operational analytics" icon="analytics-outline" onPress={() => router.push('/(admin)/analytics' as Href)} /></View><AppBadge label="No payment gateway, Storage uploads, push notifications, APIs, GPS, maps, or live tracking added." tone="info" icon="information-circle-outline" /><AdminBottomNavigation active="dashboard" /></ScreenContainer></AdminGate>;
 }
 
 export function AdminProfileScreen() {
-  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Admin Profile" subtitle="Administrator account" leftIcon="arrow-back" onLeftPress={() => router.back()} /><AppBadge label="Admin role verified through Firestore profile." tone="success" icon="shield-checkmark-outline" /><AdminActionCard title="User Management" subtitle="Review users and roles" icon="people-outline" onPress={() => router.push('/(admin)/users' as Href)} /><AdminActionCard title="Platform Settings" subtitle="Service fees and maintenance mode" icon="settings-outline" onPress={() => router.push('/(admin)/settings' as Href)} /><AdminBottomNavigation active="settings" /></ScreenContainer></AdminGate>;
+  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Admin Profile" subtitle="Administrator account" leftIcon="arrow-back" onLeftPress={() => router.back()} /><AppBadge label="Admin role verified through Firestore profile." tone="success" icon="shield-checkmark-outline" /><AdminActionCard title="User Management" subtitle="Review users and roles" icon="people-outline" onPress={() => router.push('/(admin)/users' as Href)} /><AdminActionCard title="Platform Settings" subtitle="Service fees and maintenance mode" icon="settings-outline" onPress={() => router.push('/(admin)/settings' as Href)} /><AdminLogoutAction /><AdminBottomNavigation active="settings" /></ScreenContainer></AdminGate>;
 }
 
 export function AdminUsersScreen({ fixedRole, title = 'User Management' }: { fixedRole?: UserRole; title?: string }) {
   const usersState = useAdminUsers(fixedRole ?? 'all');
+  const customerSummaries = useAdminCustomerSummaries();
   const [query, setQuery] = useState('');
   const [role, setRole] = useState<UserRole | 'all'>(fixedRole ?? 'all');
   const [status, setStatus] = useState<UserStatus | 'all'>('all');
   const users = useAdminUserFilters(usersState.data, query, fixedRole ?? role, status);
-  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title={title} subtitle="Search, filter, activate, suspend" leftIcon="arrow-back" onLeftPress={() => router.back()} />{usersState.loading ? <LoadingState title="Loading users" message="Fetching Firestore user records." /> : null}{usersState.error ? <FriendlyErrorState title="Users unavailable" message={usersState.error} onRetry={usersState.retry} /> : null}<SearchBar value={query} onChangeText={setQuery} placeholder="Search users" />{!fixedRole ? <View style={styles.chips}>{roles.map((item) => <AppButton key={item} label={item} size="sm" fullWidth={false} variant={role === item ? 'primary' : 'outline'} onPress={() => setRole(item)} />)}</View> : null}<View style={styles.chips}>{statuses.map((item) => <AppButton key={item} label={item} size="sm" fullWidth={false} variant={status === item ? 'primary' : 'outline'} onPress={() => setStatus(item)} />)}</View>{!usersState.loading && users.length === 0 ? <EmptyState title="No users found" message="Matching Firestore users will appear here." icon="people-outline" /> : null}<View style={styles.section}><SectionHeader title="Users" subtitle={`${users.length} visible`} />{users.map((user) => <AdminEntityCard key={user.id} title={user.fullName} subtitle={`${user.email ?? 'No email'} - ${user.phone}`} meta={`${user.role} - ${user.username}`} badge={user.status} badgeTone={user.status === 'active' ? 'success' : user.status === 'disabled' ? 'danger' : 'warning'} primaryActionLabel="Activate" onPrimaryAction={() => usersState.updateStatus(user.id, 'active')} dangerActionLabel="Suspend" onDangerAction={() => usersState.updateStatus(user.id, 'disabled')} />)}</View><AdminBottomNavigation active="users" /></ScreenContainer></AdminGate>;
+  const statusOptions: Array<UserStatus | 'all'> = fixedRole === 'customer' ? ['all', 'active', 'disabled'] : statuses;
+  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title={title} subtitle="Search, filter, activate, suspend" leftIcon="arrow-back" onLeftPress={() => router.back()} />{usersState.loading ? <LoadingState title="Loading users" message="Fetching Firestore user records." /> : null}{usersState.error ? <FriendlyErrorState title="Users unavailable" message={usersState.error} onRetry={usersState.retry} /> : null}{customerSummaries.error ? <AppBadge label={customerSummaries.error} tone="warning" icon="warning-outline" /> : null}<SearchBar value={query} onChangeText={setQuery} placeholder={fixedRole === 'customer' ? 'Search customers by name, username, email, or phone' : 'Search users'} />{!fixedRole ? <View style={styles.chips}>{roles.map((item) => <AppButton key={item} label={item} size="sm" fullWidth={false} variant={role === item ? 'primary' : 'outline'} onPress={() => setRole(item)} />)}</View> : null}<View style={styles.chips}>{statusOptions.map((item) => <AppButton key={item} label={item === 'disabled' ? 'Suspended' : item} size="sm" fullWidth={false} variant={status === item ? 'primary' : 'outline'} onPress={() => setStatus(item)} />)}</View>{!usersState.loading && users.length === 0 ? <EmptyState title={fixedRole === 'customer' ? 'No customers found' : 'No users found'} message={usersState.data.length === 0 ? 'Firestore user profile records will appear here after registration creates users/{uid} documents.' : 'No records match the current search and filter.'} icon="people-outline" /> : null}<View style={styles.section}><SectionHeader title={fixedRole === 'customer' ? 'Customers' : 'Users'} subtitle={`${users.length} visible`} />{users.map((user) => { const summary = customerSummaries.data[user.id]; return <AdminEntityCard key={user.id} title={safeUserText(user.fullName, 'Unnamed user')} subtitle={fixedRole === 'customer' ? customerSubtitle(user) : `${safeUserText(user.email, 'No email')} - ${safeUserText(user.phone, 'Phone pending')}`} meta={fixedRole === 'customer' ? customerMeta(user, summary) : `${user.role} - ${safeUserText(user.username, 'Username pending')}`} badge={userStatusLabel(user.status)} badgeTone={userStatusTone(user.status)} onPress={fixedRole === 'customer' ? () => router.push({ pathname: '/(admin)/customers/[customerId]', params: { customerId: user.id } } as unknown as Href) : undefined} primaryActionLabel={user.status === 'disabled' ? 'Reactivate' : 'Activate'} onPrimaryAction={() => usersState.updateStatus(user.id, 'active')} dangerActionLabel={user.status === 'disabled' ? undefined : 'Suspend'} onDangerAction={() => usersState.updateStatus(user.id, 'disabled')} />; })}</View><AdminBottomNavigation active="users" /></ScreenContainer></AdminGate>;
+}
+
+export function AdminCustomerDetailsScreen() {
+  const { customerId } = useLocalSearchParams<{ customerId?: string }>();
+  const usersState = useAdminUsers('customer');
+  const customerSummaries = useAdminCustomerSummaries();
+  const customer = usersState.data.find((user) => user.id === customerId);
+  const summary = customerId ? customerSummaries.data[customerId] : undefined;
+  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Customer Details" subtitle={customerId ?? 'Customer'} leftIcon="arrow-back" onLeftPress={() => router.back()} />{usersState.loading ? <LoadingState title="Loading customer" /> : null}{usersState.error ? <FriendlyErrorState title="Customer unavailable" message={usersState.error} onRetry={usersState.retry} /> : null}{!customer && !usersState.loading ? <EmptyState title="Customer not found" message="The customer profile document is unavailable." icon="person-outline" /> : null}{customer ? <><View style={styles.statsGrid}><AdminStatCard label="Orders" value={`${summary?.orderCount ?? 0}`} icon="receipt-outline" /><AdminStatCard label="Spending" value={formatCurrency(summary?.totalSpending ?? 0)} icon="cash-outline" tone="success" /><AdminStatCard label="Status" value={userStatusLabel(customer.status)} icon="shield-checkmark-outline" tone={userStatusTone(customer.status)} /></View><View style={styles.section}><SectionHeader title="Profile" subtitle="Firestore users document" /><AdminEntityCard title={safeUserText(customer.fullName, 'Unnamed user')} subtitle={customerSubtitle(customer)} meta={`Phone: ${safeUserText(customer.phone, 'Phone pending')}`} badge={userStatusLabel(customer.status)} badgeTone={userStatusTone(customer.status)} /><AdminEntityCard title="Delivery Address" subtitle={safeUserText(customer.address, 'Address pending')} meta={`Registered: ${formatDate(customer.createdAt)}`} /></View><View style={styles.chips}><AppButton label="Reactivate" fullWidth={false} onPress={() => usersState.updateStatus(customer.id, 'active')} /><AppButton label="Suspend" fullWidth={false} variant="danger" onPress={() => usersState.updateStatus(customer.id, 'disabled')} /></View></> : null}<AdminBottomNavigation active="users" /></ScreenContainer></AdminGate>;
 }
 
 export function AdminRestaurantsScreen({ approvalOnly = false }: { approvalOnly?: boolean }) {
@@ -88,14 +186,15 @@ export function AdminOrdersScreen() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<OrderStatusModel | 'all'>('all');
   const orders = useAdminOrderFilters(ordersState.data, query, status);
-  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Orders Management" subtitle="Search, filter, update status" leftIcon="arrow-back" onLeftPress={() => router.back()} />{ordersState.loading ? <LoadingState title="Loading orders" /> : null}{ordersState.error ? <FriendlyErrorState title="Orders unavailable" message={ordersState.error} onRetry={ordersState.retry} /> : null}<SearchBar value={query} onChangeText={setQuery} placeholder="Search orders" /><View style={styles.chips}><AppButton label="all" size="sm" fullWidth={false} variant={status === 'all' ? 'primary' : 'outline'} onPress={() => setStatus('all')} />{adminOrderStatuses.map((item) => <AppButton key={item.value} label={item.label} size="sm" fullWidth={false} variant={status === item.value ? 'primary' : 'outline'} onPress={() => setStatus(item.value)} />)}</View>{orders.length === 0 && !ordersState.loading ? <EmptyState title="No orders found" message="Order records will appear here." icon="receipt-outline" /> : null}<View style={styles.section}>{orders.map((order) => <AdminEntityCard key={order.id} title={`Order ${order.id}`} subtitle={order.items.map((item) => `${item.quantity}x ${item.name}`).join(', ')} meta={`${formatCurrency(order.total)} - Restaurant ${order.restaurantId}`} badge={getVendorOrderStatusLabel(order.status)} badgeTone={order.status === 'delivered' ? 'success' : order.status === 'cancelled' ? 'danger' : 'warning'} onPress={() => router.push({ pathname: '/(admin)/orders/[orderId]', params: { orderId: order.id } } as unknown as Href)} secondaryActionLabel="Mark Ready" onSecondaryAction={() => ordersState.updateStatus(order.id, 'ready')} dangerActionLabel="Cancel" onDangerAction={() => ordersState.updateStatus(order.id, 'cancelled')} />)}</View><AdminBottomNavigation active="orders" /></ScreenContainer></AdminGate>;
+  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Orders Management" subtitle="Search, filter, update status" leftIcon="arrow-back" onLeftPress={() => router.back()} />{ordersState.loading ? <LoadingState title="Loading orders" /> : null}{ordersState.error ? <FriendlyErrorState title="Orders unavailable" message={ordersState.error} onRetry={ordersState.retry} /> : null}<SearchBar value={query} onChangeText={setQuery} placeholder="Search orders" /><View style={styles.chips}><AppButton label="all" size="sm" fullWidth={false} variant={status === 'all' ? 'primary' : 'outline'} onPress={() => setStatus('all')} />{adminOrderStatuses.map((item) => <AppButton key={item.value} label={item.label} size="sm" fullWidth={false} variant={status === item.value ? 'primary' : 'outline'} onPress={() => setStatus(item.value)} />)}</View>{orders.length === 0 && !ordersState.loading ? <EmptyState title="No orders found" message="Order records will appear here." icon="receipt-outline" /> : null}<View style={styles.section}>{orders.map((order) => { const payment = ordersState.paymentsByOrderId.get(order.id); return <AdminEntityCard key={order.id} title={`Order ${order.id}`} subtitle={order.items.map((item) => `${item.quantity}x ${item.name}`).join(', ')} meta={`${formatCurrency(order.total)} - ${orderPaymentSummary(order, payment)} - ${paymentDetailText(payment)}`} badge={getVendorOrderStatusLabel(order.status)} badgeTone={orderTone(order.status)} onPress={() => router.push({ pathname: '/(admin)/orders/[orderId]', params: { orderId: order.id } } as unknown as Href)} primaryActionLabel="Preparing" onPrimaryAction={() => ordersState.setProgressStatus(order, 'preparing')} secondaryActionLabel="Ready" onSecondaryAction={() => ordersState.setProgressStatus(order, 'ready')} dangerActionLabel="Cancel" onDangerAction={() => ordersState.setProgressStatus(order, 'cancelled')} />; })}</View><AdminBottomNavigation active="orders" /></ScreenContainer></AdminGate>;
 }
 
 export function AdminOrderDetailsScreen() {
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const ordersState = useAdminOrders();
   const order = ordersState.data.find((item) => item.id === orderId);
-  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Order Details" subtitle={orderId ?? 'Order'} leftIcon="arrow-back" onLeftPress={() => router.back()} />{ordersState.loading ? <LoadingState title="Loading order" /> : null}{!order && !ordersState.loading ? <EmptyState title="Order not found" message="The order document is unavailable." icon="receipt-outline" /> : null}{order ? <><View style={styles.statsGrid}><AdminStatCard label="Total" value={formatCurrency(order.total)} icon="cash-outline" tone="success" /><AdminStatCard label="Status" value={getVendorOrderStatusLabel(order.status)} icon="time-outline" tone="warning" /></View><View style={styles.section}><SectionHeader title="Items" />{order.items.map((item) => <AdminEntityCard key={item.foodId} title={item.name} subtitle={`${item.quantity} x ${formatCurrency(item.unitPrice)}`} meta={formatCurrency(item.lineTotal)} />)}</View><View style={styles.chips}>{adminOrderStatuses.map((status) => <AppButton key={status.value} label={status.label} fullWidth={false} size="sm" onPress={() => ordersState.updateStatus(order.id, status.value)} />)}</View></> : null}<AdminBottomNavigation active="orders" /></ScreenContainer></AdminGate>;
+  const payment = order ? ordersState.paymentsByOrderId.get(order.id) : undefined;
+  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Order Details" subtitle={orderId ?? 'Order'} leftIcon="arrow-back" onLeftPress={() => router.back()} />{ordersState.loading ? <LoadingState title="Loading order" /> : null}{!order && !ordersState.loading ? <EmptyState title="Order not found" message="The order document is unavailable." icon="receipt-outline" /> : null}{order ? <><View style={styles.statsGrid}><AdminStatCard label="Total" value={formatCurrency(order.total)} icon="cash-outline" tone="success" /><AdminStatCard label="Order" value={getVendorOrderStatusLabel(order.status)} icon="time-outline" tone={orderTone(order.status)} /><AdminStatCard label="Payment" value={paymentStatusLabel(payment?.status ?? order.paymentStatus)} icon="card-outline" tone={paymentTone(payment?.status ?? order.paymentStatus)} /></View><View style={styles.section}><SectionHeader title="Payment" subtitle={paymentMethodLabel(payment?.method)} /><AdminEntityCard title={orderPaymentSummary(order, payment)} subtitle={paymentDetailText(payment)} meta={`Customer ${order.customerName ?? order.customerId} - ${order.customerId}`} badge={paymentStatusLabel(payment?.status ?? order.paymentStatus)} badgeTone={paymentTone(payment?.status ?? order.paymentStatus)} primaryActionLabel="Approve Payment" onPrimaryAction={() => ordersState.approvePayment(order)} dangerActionLabel="Reject Payment" onDangerAction={() => ordersState.rejectPayment(order)} /></View><View style={styles.section}><SectionHeader title="Items" />{order.items.map((item) => <AdminEntityCard key={item.foodId} title={item.name} subtitle={`${item.quantity} x ${formatCurrency(item.unitPrice)}`} meta={formatCurrency(item.lineTotal)} />)}</View><View style={styles.section}><SectionHeader title="Order Status" subtitle="Manual university demo workflow" /><View style={styles.chips}><AppButton label="Payment Confirmed" fullWidth={false} size="sm" onPress={() => ordersState.setProgressStatus(order, 'paymentConfirmed')} /><AppButton label="Preparing" fullWidth={false} size="sm" onPress={() => ordersState.setProgressStatus(order, 'preparing')} /><AppButton label="Ready" fullWidth={false} size="sm" onPress={() => ordersState.setProgressStatus(order, 'ready')} /><AppButton label="Out for Delivery" fullWidth={false} size="sm" onPress={() => ordersState.setProgressStatus(order, 'outForDelivery')} /><AppButton label="Delivered" fullWidth={false} size="sm" onPress={() => ordersState.setProgressStatus(order, 'delivered')} /><AppButton label="Cancel" fullWidth={false} size="sm" variant="danger" onPress={() => ordersState.setProgressStatus(order, 'cancelled')} /></View></View></> : null}<AdminBottomNavigation active="orders" /></ScreenContainer></AdminGate>;
 }
 
 export function AdminCouponsScreen() {
@@ -162,7 +261,7 @@ export function AdminSettingsScreen() {
     setNotice('Platform settings saved to Firestore.');
   }
 
-  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Platform Settings" subtitle="Fees, tax, maintenance, contact" leftIcon="arrow-back" onLeftPress={() => router.back()} />{settingsState.loading ? <LoadingState title="Loading settings" /> : null}{settingsState.error ? <FriendlyErrorState title="Settings unavailable" message={settingsState.error} onRetry={settingsState.retry} /> : null}<View style={styles.form}><AppInput label="Platform name" value={platformName} onChangeText={setPlatformName} leftIcon="restaurant-outline" /><AppInput label="Tax percentage" value={taxPercentage} onChangeText={setTaxPercentage} keyboardType="number-pad" leftIcon="calculator-outline" /><AppInput label="Service fee" value={serviceFee} onChangeText={setServiceFee} keyboardType="number-pad" leftIcon="cash-outline" /><AppInput label="Delivery fee" value={deliveryFee} onChangeText={setDeliveryFee} keyboardType="number-pad" leftIcon="bicycle-outline" /><AppInput label="Contact email" value={contactEmail} onChangeText={setContactEmail} leftIcon="mail-outline" /><AppInput label="Contact phone" value={contactPhone} onChangeText={setContactPhone} leftIcon="call-outline" /></View><View style={styles.chips}><AppButton label={maintenanceMode ? 'Maintenance On' : 'Maintenance Off'} variant={maintenanceMode ? 'danger' : 'outline'} fullWidth={false} onPress={() => setMaintenanceMode((current) => !current)} /><AppButton label="Save Settings" fullWidth={false} leftIcon="save-outline" onPress={saveSettings} /></View>{notice ? <AppBadge label={notice} tone="success" icon="checkmark-circle-outline" /> : null}<AdminBottomNavigation active="settings" /></ScreenContainer></AdminGate>;
+  return <AdminGate><ScreenContainer scroll contentStyle={styles.screen}><AppHeader title="Platform Settings" subtitle="Fees, tax, maintenance, contact" leftIcon="arrow-back" onLeftPress={() => router.back()} />{settingsState.loading ? <LoadingState title="Loading settings" /> : null}{settingsState.error ? <FriendlyErrorState title="Settings unavailable" message={settingsState.error} onRetry={settingsState.retry} /> : null}<View style={styles.form}><AppInput label="Platform name" value={platformName} onChangeText={setPlatformName} leftIcon="restaurant-outline" /><AppInput label="Tax percentage" value={taxPercentage} onChangeText={setTaxPercentage} keyboardType="number-pad" leftIcon="calculator-outline" /><AppInput label="Service fee" value={serviceFee} onChangeText={setServiceFee} keyboardType="number-pad" leftIcon="cash-outline" /><AppInput label="Delivery fee" value={deliveryFee} onChangeText={setDeliveryFee} keyboardType="number-pad" leftIcon="bicycle-outline" /><AppInput label="Contact email" value={contactEmail} onChangeText={setContactEmail} leftIcon="mail-outline" /><AppInput label="Contact phone" value={contactPhone} onChangeText={setContactPhone} leftIcon="call-outline" /></View><View style={styles.chips}><AppButton label={maintenanceMode ? 'Maintenance On' : 'Maintenance Off'} variant={maintenanceMode ? 'danger' : 'outline'} fullWidth={false} onPress={() => setMaintenanceMode((current) => !current)} /><AppButton label="Save Settings" fullWidth={false} leftIcon="save-outline" onPress={saveSettings} /></View>{notice ? <AppBadge label={notice} tone="success" icon="checkmark-circle-outline" /> : null}<AdminLogoutAction /><AdminBottomNavigation active="settings" /></ScreenContainer></AdminGate>;
 }
 
 export function AdminRoleManagementScreen() {

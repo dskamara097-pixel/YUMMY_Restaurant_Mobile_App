@@ -17,8 +17,17 @@ import { spacing } from '@/constants/theme';
 import { useVendorCoupons, useVendorOffers } from '@/hooks/useVendorOffers';
 import { useVendorRestaurant } from '@/hooks/useVendorRestaurant';
 
-type PromoForm = { title: string; description: string; code: string; discountValue: string; expiresAt: string; active: boolean };
-const emptyForm: PromoForm = { title: '', description: '', code: '', discountValue: '10', expiresAt: '2026-12-31', active: true };
+type PromotionType = 'percentage' | 'fixed' | 'bogo' | 'freeDelivery' | 'weekendSpecial';
+type PromoForm = { title: string; description: string; code: string; discountType: PromotionType; discountValue: string; expiresAt: string; active: boolean };
+const emptyForm: PromoForm = { title: '', description: '', code: '', discountType: 'percentage', discountValue: '10', expiresAt: '2026-12-31', active: true };
+
+function discountLabel(type: PromotionType, value: string) {
+  if (type === 'fixed') return `${value} off`;
+  if (type === 'bogo') return 'Buy one get one';
+  if (type === 'freeDelivery') return 'Free delivery';
+  if (type === 'weekendSpecial') return `Weekend special ${value}% off`;
+  return `${value}% off`;
+}
 
 export default function VendorOffersScreen() {
   const restaurantState = useVendorRestaurant();
@@ -34,14 +43,14 @@ export default function VendorOffersScreen() {
     const discountValue = Number(form.discountValue);
     if (!form.title.trim() || !form.description.trim() || !form.code.trim()) { setNotice('Coupon title, description, and code are required.'); return; }
     if (!Number.isFinite(discountValue) || discountValue <= 0) { setNotice('Discount must be greater than zero.'); return; }
-    await couponsState.saveCoupon({ code: form.code, title: form.title, description: form.description, discountType: 'percentage', discountValue, expiresAt: form.expiresAt, active: form.active });
+    await couponsState.saveCoupon({ code: form.code, title: form.title, description: form.description, discountType: form.discountType === 'fixed' ? 'fixed' : 'percentage', discountValue, expiresAt: form.expiresAt, active: form.active });
     setNotice('Coupon saved to Firestore.');
     setForm(emptyForm);
   }
 
   async function saveOffer() {
     if (!form.title.trim() || !form.description.trim()) { setNotice('Offer title and description are required.'); return; }
-    await offersState.saveOffer({ title: form.title, description: form.description, badgeLabel: form.code || 'Vendor offer', discountLabel: `${form.discountValue}% off`, expiresAt: form.expiresAt, featured: true, active: form.active });
+    await offersState.saveOffer({ title: form.title, description: form.description, badgeLabel: form.code || 'Vendor offer', discountLabel: discountLabel(form.discountType, form.discountValue), expiresAt: form.expiresAt, featured: true, active: form.active });
     setNotice('Offer saved to Firestore.');
     setForm(emptyForm);
   }
@@ -55,6 +64,7 @@ export default function VendorOffersScreen() {
         <AppInput label="Title" value={form.title} onChangeText={(value) => updateField('title', value)} leftIcon="gift-outline" />
         <AppInput label="Description" value={form.description} onChangeText={(value) => updateField('description', value)} leftIcon="reader-outline" />
         <AppInput label="Coupon code or badge" value={form.code} onChangeText={(value) => updateField('code', value)} leftIcon="pricetag-outline" autoCapitalize="characters" />
+        <View style={styles.actions}>{(['percentage', 'fixed', 'bogo', 'freeDelivery', 'weekendSpecial'] as const).map((type) => <AppButton key={type} label={type} size="sm" fullWidth={false} variant={form.discountType === type ? 'primary' : 'outline'} onPress={() => updateField('discountType', type)} />)}</View>
         <AppInput label="Discount percentage" value={form.discountValue} onChangeText={(value) => updateField('discountValue', value)} leftIcon="trending-down-outline" keyboardType="number-pad" />
         <AppInput label="Expiry date" value={form.expiresAt} onChangeText={(value) => updateField('expiresAt', value)} leftIcon="calendar-outline" />
         <View style={styles.actions}><AppButton label={form.active ? 'Active' : 'Hidden'} fullWidth={false} variant={form.active ? 'primary' : 'outline'} onPress={() => updateField('active', !form.active)} /><AppButton label="Save Coupon" fullWidth={false} leftIcon="pricetag-outline" onPress={saveCoupon} /><AppButton label="Save Offer" fullWidth={false} variant="secondary" leftIcon="gift-outline" onPress={saveOffer} /></View>

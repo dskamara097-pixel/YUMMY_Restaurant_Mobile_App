@@ -8,11 +8,13 @@ export class CategoryRepository extends FirestoreRepository<CategoryModel> {
   }
 
   listActive() {
-    return this.list({ filters: [{ field: 'active', value: true }], sort: [{ field: 'sortOrder' }, { field: 'name' }] });
+    return this.list({ filters: [{ field: 'active', value: true }] })
+      .then((categories) => categories.sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name)));
   }
 
   listByRestaurant(restaurantId: string) {
-    return this.list({ filters: [{ field: 'restaurantId', value: restaurantId }], sort: [{ field: 'sortOrder' }, { field: 'name' }] });
+    return this.list({ filters: [{ field: 'restaurantId', value: restaurantId }] })
+      .then((categories) => categories.sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name)));
   }
 }
 

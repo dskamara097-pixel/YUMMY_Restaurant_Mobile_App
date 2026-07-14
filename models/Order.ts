@@ -1,12 +1,28 @@
 ﻿import { CartItemModel } from '@/models/Cart';
 import { PaymentStatusModel } from '@/models/Payment';
 
-export type OrderStatusModel = 'pending' | 'paymentReceived' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+export type OrderStatusModel =
+  | 'pending'
+  | 'pendingPaymentVerification'
+  | 'paymentConfirmed'
+  | 'paymentRejected'
+  | 'paymentReceived'
+  | 'accepted'
+  | 'preparing'
+  | 'ready'
+  | 'waitingForRider'
+  | 'pickedUp'
+  | 'outForDelivery'
+  | 'delivered'
+  | 'completed'
+  | 'cancelled';
 
 export interface OrderModel {
   id: string;
   customerId: string;
+  customerName?: string;
   restaurantId: string;
+  restaurantName?: string;
   items: CartItemModel[];
   subtotal: number;
   deliveryFee: number;
@@ -19,6 +35,8 @@ export interface OrderModel {
   riderId?: string;
   deliveryAddressId: string;
   notes?: string;
+  customerConfirmedDelivery?: boolean;
+  completedAt?: string;
   createdAt: string;
   updatedAt?: string;
 }

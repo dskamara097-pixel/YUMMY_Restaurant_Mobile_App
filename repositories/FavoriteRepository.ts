@@ -8,11 +8,13 @@ export class FavoriteRepository extends FirestoreRepository<FavoriteModel> {
   }
 
   listByUser(userId: string) {
-    return this.list({ filters: [{ field: 'userId', value: userId }], sort: [{ field: 'createdAt', direction: 'desc' }] });
+    return this.list({ filters: [{ field: 'userId', value: userId }] })
+      .then((favorites) => favorites.sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()));
   }
 
   listByUserAndType(userId: string, targetType: FavoriteModel['targetType']) {
-    return this.list({ filters: [{ field: 'userId', value: userId }, { field: 'targetType', value: targetType }] });
+    return this.list({ filters: [{ field: 'userId', value: userId }] })
+      .then((favorites) => favorites.filter((favorite) => favorite.targetType === targetType));
   }
 }
 

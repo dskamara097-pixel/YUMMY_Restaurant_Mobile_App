@@ -6,6 +6,10 @@ type Loader<TData> = () => Promise<TData>;
 
 const queryCache = new Map<string, unknown>();
 
+export function clearFirestoreDataCache() {
+  queryCache.clear();
+}
+
 export type FirestoreHookState<TData> = {
   data: TData;
   loading: boolean;
@@ -16,7 +20,18 @@ export type FirestoreHookState<TData> = {
 
 function readError(error: unknown) {
   const nextError = error as { message?: string };
-  return nextError.message ?? 'Unable to load Firestore data. Please try again.';
+  const message = nextError.message ?? '';
+  const lowerMessage = message.toLowerCase();
+
+  if (lowerMessage.includes('permission') || lowerMessage.includes('insufficient')) {
+    return 'You do not have permission to load this Firestore data. Please check the account role and Firebase rules.';
+  }
+
+  if (lowerMessage.includes('index')) {
+    return 'This Firestore data could not be loaded because a database index is missing. Try again after checking the Firebase setup.';
+  }
+
+  return 'Unable to load Firestore data. Please try again.';
 }
 
 export function useFirestoreData<TData>(cacheKey: string, initialData: TData, loader: Loader<TData>): FirestoreHookState<TData> {
@@ -37,8 +52,9 @@ export function useFirestoreData<TData>(cacheKey: string, initialData: TData, lo
       setData(nextData);
     } catch (nextError) {
       const fallbackData = queryCache.get(cacheKey) as TData | undefined;
+      const nextData = fallbackData ?? initialData;
       setError(readError(nextError));
-      setData(fallbackData ?? initialData);
+      setData(nextData);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -54,4 +70,6 @@ export function useFirestoreData<TData>(cacheKey: string, initialData: TData, lo
     [data, error, load, loading, refreshing],
   );
 }
+
+
 

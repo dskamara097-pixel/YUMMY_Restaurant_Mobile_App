@@ -23,6 +23,21 @@ function paymentStatusTone(status: string) {
   return 'info' as const;
 }
 
+function paymentStatusLabel(status: string) {
+  if (status === 'awaitingApproval') return 'Awaiting Approval';
+  if (status === 'paid') return 'Paid';
+  if (status === 'failed') return 'Failed';
+  if (status === 'refunded') return 'Refunded';
+  return 'Pending';
+}
+
+function paymentMethodLabel(method: string) {
+  if (method === 'cashOnDelivery') return 'Cash on Delivery';
+  if (method === 'dummyMobileMoney') return 'Dummy Mobile Money';
+  if (method === 'dummyCard') return 'Dummy Card Payment';
+  return method;
+}
+
 export default function CustomerPaymentScreen() {
   const paymentsState = usePayments();
   const [notice, setNotice] = useState('');
@@ -44,11 +59,11 @@ export default function CustomerPaymentScreen() {
           {paymentsState.data.map((payment) => (
             <View key={payment.id} style={styles.card}>
               <View style={styles.rowBetween}>
-                <AppBadge label={payment.status} tone={paymentStatusTone(payment.status)} icon="card-outline" />
+                <AppBadge label={paymentStatusLabel(payment.status)} tone={paymentStatusTone(payment.status)} icon="card-outline" />
                 <AppText variant="bodyStrong">{formatCurrency(payment.amount)}</AppText>
               </View>
               <AppText variant="label">Order {payment.orderId}</AppText>
-              <AppText tone="muted">Method: {payment.method}</AppText>
+              <AppText tone="muted">Method: {paymentMethodLabel(payment.method)}</AppText>
               <AppText variant="caption" tone="muted">Reference: {payment.transactionReference}</AppText>
             </View>
           ))}

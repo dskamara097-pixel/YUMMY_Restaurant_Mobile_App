@@ -12,6 +12,8 @@ import { PasswordInput } from '@/components/forms/PasswordInput';
 import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { clearFirestoreDataCache } from '@/hooks/useFirestoreData';
+import { userRepository } from '@/repositories/UserRepository';
 import { isValidEmail } from '@/utils/authValidation';
 
 export default function AdminLoginScreen() {
@@ -25,7 +27,14 @@ export default function AdminLoginScreen() {
     if (!isValidEmail(email)) { setNotice('Enter a valid admin email address.'); return; }
     if (password.length < 8) { setNotice('Password must be at least 8 characters.'); return; }
     try {
-      await auth.login({ email: email.trim(), password });
+      const user = await auth.login({ email: email.trim(), password });
+      const profile = user ? await userRepository.getById(user.uid) : null;
+      if (profile?.role !== 'admin') {
+        await auth.logout();
+        clearFirestoreDataCache();
+        setNotice('This account is not registered as an administrator.');
+        return;
+      }
       router.replace('/(admin)/dashboard' as Href);
     } catch {
       setNotice('Admin login failed. Check credentials and admin role profile.');

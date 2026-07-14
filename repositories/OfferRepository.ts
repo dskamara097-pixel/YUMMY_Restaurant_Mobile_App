@@ -12,15 +12,18 @@ export class OfferRepository extends FirestoreRepository<OfferModel> {
   }
 
   listActive() {
-    return this.list({ filters: [{ field: 'active', value: true }], sort: [{ field: 'featured', direction: 'desc' }, { field: 'expiresAt' }] });
+    return this.list({ filters: [{ field: 'active', value: true }] })
+      .then((offers) => offers.sort((left, right) => Number(right.featured) - Number(left.featured) || left.expiresAt.localeCompare(right.expiresAt)));
   }
 
   listFeatured() {
-    return this.list({ filters: [{ field: 'active', value: true }, { field: 'featured', value: true }], pageSize: 6 });
+    return this.listActive()
+      .then((offers) => offers.filter((offer) => offer.featured).slice(0, 6));
   }
 
   listByRestaurant(restaurantId: string) {
-    return this.list({ filters: [{ field: 'restaurantId', value: restaurantId }], sort: [{ field: 'expiresAt' }] });
+    return this.list({ filters: [{ field: 'restaurantId', value: restaurantId }] })
+      .then((offers) => offers.sort((left, right) => left.expiresAt.localeCompare(right.expiresAt)));
   }
 }
 

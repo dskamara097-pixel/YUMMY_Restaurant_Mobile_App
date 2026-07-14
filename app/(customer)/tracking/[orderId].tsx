@@ -24,9 +24,13 @@ import { mapOrderStatus } from '@/utils/firestoreAdapters';
 const trackingSteps = [
   { label: 'Order Confirmed', description: 'Your restaurant has received the order.' },
   { label: 'Payment Received', description: 'Payment status has been approved for preparation.' },
+  { label: 'Accepted', description: 'The restaurant accepted your order.' },
   { label: 'Preparing', description: 'The kitchen is preparing your meal.' },
   { label: 'Ready', description: 'Your order is ready for delivery handoff.' },
+  { label: 'Waiting for Rider', description: 'The order is waiting for rider pickup.' },
+  { label: 'Out for Delivery', description: 'Your order is on the way.' },
   { label: 'Delivered', description: 'Your order has reached the delivery address.' },
+  { label: 'Completed', description: 'Delivery has been confirmed.' },
 ];
 
 const riderPreview = {
@@ -36,15 +40,20 @@ const riderPreview = {
 };
 
 function getCurrentTimelineLabel(status?: string) {
-  if (status === 'paymentReceived') return 'Payment Received';
+  if (status === 'pendingPaymentVerification') return 'Order Confirmed';
+  if (status === 'paymentConfirmed' || status === 'paymentReceived') return 'Payment Received';
+  if (status === 'accepted') return 'Accepted';
   if (status === 'preparing') return 'Preparing';
   if (status === 'ready') return 'Ready';
+  if (status === 'waitingForRider') return 'Waiting for Rider';
+  if (status === 'pickedUp' || status === 'outForDelivery') return 'Out for Delivery';
   if (status === 'delivered') return 'Delivered';
+  if (status === 'completed') return 'Completed';
   return 'Order Confirmed';
 }
 
 function getStepState(stepLabel: string, currentStatus: string) {
-  const order = ['Order Confirmed', 'Payment Received', 'Preparing', 'Ready', 'Delivered'];
+  const order = ['Order Confirmed', 'Payment Received', 'Accepted', 'Preparing', 'Ready', 'Waiting for Rider', 'Out for Delivery', 'Delivered', 'Completed'];
   const stepIndex = order.indexOf(stepLabel);
   const currentIndex = order.indexOf(currentStatus);
   return {
@@ -100,6 +109,10 @@ export default function OrderTrackingScreen() {
         <AppBadge label={`Order ${order.id}`} tone="primary" icon="receipt-outline" />
         <AppText variant="title">{mapOrderStatus(order.status)}</AppText>
         <AppText tone="muted">Estimated delivery time: 25-40 min</AppText>
+        {order.status === 'delivered' && !order.customerConfirmedDelivery ? (
+          <AppButton label="Confirm Delivery" leftIcon="checkmark-circle-outline" loading={orderState.confirmingDelivery} onPress={() => void orderState.confirmDelivery()} />
+        ) : null}
+        {order.customerConfirmedDelivery ? <AppBadge label="Delivery confirmed by customer" tone="success" icon="checkmark-circle-outline" /> : null}
       </View>
 
       <View style={styles.sectionCard}>

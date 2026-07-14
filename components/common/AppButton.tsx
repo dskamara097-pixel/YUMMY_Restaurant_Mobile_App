@@ -76,16 +76,19 @@ export const AppButton = forwardRef<View, AppButtonProps>(function AppButton(
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
-      style={({ pressed }) => [
-        styles.button,
-        sizeStyles[size],
-        visual.container,
-        fullWidth && styles.fullWidth,
-        variant === 'primary' && shadows.soft,
-        pressed && !isDisabled && styles.pressed,
-        isDisabled && styles.disabled,
-        style,
-      ]}
+      style={(state) => {
+        const providedStyle = typeof style === 'function' ? style(state) : style;
+        return StyleSheet.flatten([
+          styles.button,
+          sizeStyles[size],
+          visual.container,
+          fullWidth && styles.fullWidth,
+          variant === 'primary' && shadows.soft,
+          state.pressed && !isDisabled && styles.pressed,
+          isDisabled && styles.disabled,
+          providedStyle,
+        ]);
+      }}
       {...props}
     >
       {loading ? <ActivityIndicator color={visual.icon} /> : null}

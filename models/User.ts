@@ -9,6 +9,7 @@ export interface UserModel {
   usernameLower: string;
   email?: string;
   phone: string;
+  address?: string;
   role: UserRole;
   status: UserStatus;
   defaultAddressId?: string;

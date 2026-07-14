@@ -20,6 +20,13 @@ import { getVendorOrderStatusLabel, useVendorOrderFilters, useVendorOrders, vend
 import { useVendorRestaurant } from '@/hooks/useVendorRestaurant';
 import { formatCurrency } from '@/utils/formatCurrency';
 
+function paymentMethodLabel(method?: string) {
+  if (method === 'cashOnDelivery') return 'Cash on Delivery';
+  if (method === 'dummyMobileMoney') return 'Dummy Mobile Money';
+  if (method === 'dummyCard') return 'Dummy Card';
+  return 'Payment pending';
+}
+
 export default function VendorOrderManagementScreen() {
   const restaurantState = useVendorRestaurant();
   const ordersState = useVendorOrders(restaurantState.data?.id);
@@ -39,7 +46,7 @@ export default function VendorOrderManagementScreen() {
       <SearchBar value={query} onChangeText={setQuery} placeholder="Search orders, customer id, or food" />
       <View style={styles.chips}><AppButton label="All" size="sm" fullWidth={false} variant={status === 'all' ? 'primary' : 'outline'} onPress={() => setStatus('all')} />{vendorOrderStatuses.map((item) => <AppButton key={item.value} label={item.label} size="sm" fullWidth={false} variant={status === item.value ? 'primary' : 'outline'} onPress={() => setStatus(item.value)} />)}</View>
       {!ordersState.loading && orders.length === 0 ? <EmptyState title="No orders found" message="Orders matching your filter will appear here." icon="receipt-outline" /> : null}
-      <View style={styles.section}><SectionHeader title="Restaurant Orders" subtitle={`${orders.length} visible`} />{orders.map((order) => <VendorEntityCard key={order.id} title={`Order ${order.id}`} subtitle={order.items.map((item) => `${item.quantity}x ${item.name}`).join(', ')} meta={`${formatCurrency(order.total)} - ${order.createdAt}`} badge={getVendorOrderStatusLabel(order.status)} badgeTone={order.status === 'cancelled' ? 'danger' : order.status === 'delivered' ? 'success' : 'warning'} onPress={() => router.push({ pathname: '/(vendor)/orders/[orderId]', params: { orderId: order.id } } as unknown as Href)} primaryActionLabel="Accept" onPrimaryAction={() => ordersState.acceptOrder(order.id)} secondaryActionLabel="Status" onSecondaryAction={() => router.push({ pathname: '/(vendor)/orders/[orderId]/status', params: { orderId: order.id } } as unknown as Href)} dangerActionLabel="Reject" onDangerAction={() => ordersState.rejectOrder(order.id)} />)}</View>
+      <View style={styles.section}><SectionHeader title="Restaurant Orders" subtitle={`${orders.length} visible`} />{orders.map((order) => { const payment = ordersState.paymentsByOrderId.get(order.id); return <VendorEntityCard key={order.id} title={`Order ${order.id}`} subtitle={`${order.customerName ?? 'Customer'} - ${order.items.map((item) => `${item.quantity}x ${item.name}`).join(', ')}`} meta={`${formatCurrency(order.total)} - ${paymentMethodLabel(payment?.method)} - ${payment?.status ?? order.paymentStatus} - ${order.createdAt}`} badge={getVendorOrderStatusLabel(order.status)} badgeTone={order.status === 'cancelled' ? 'danger' : order.status === 'delivered' || order.status === 'completed' ? 'success' : 'warning'} onPress={() => router.push({ pathname: '/(vendor)/orders/[orderId]', params: { orderId: order.id } } as unknown as Href)} primaryActionLabel="Accept" onPrimaryAction={() => ordersState.acceptOrder(order.id)} secondaryActionLabel="Status" onSecondaryAction={() => router.push({ pathname: '/(vendor)/orders/[orderId]/status', params: { orderId: order.id } } as unknown as Href)} dangerActionLabel="Reject" onDangerAction={() => ordersState.rejectOrder(order.id)} />; })}</View>
       <AppBadge label="Order tracking remains status/timeline based. No GPS or live map is used." tone="info" icon="checkmark-circle-outline" />
       <VendorBottomNavigation active="orders" />
     </ScreenContainer>

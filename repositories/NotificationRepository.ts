@@ -8,11 +8,13 @@ export class NotificationRepository extends FirestoreRepository<NotificationMode
   }
 
   listByUser(userId: string) {
-    return this.list({ filters: [{ field: 'userId', value: userId }], sort: [{ field: 'createdAt', direction: 'desc' }] });
+    return this.list({ filters: [{ field: 'userId', value: userId }] })
+      .then((notifications) => notifications.sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()));
   }
 
   listUnreadByUser(userId: string) {
-    return this.list({ filters: [{ field: 'userId', value: userId }, { field: 'read', value: false }], sort: [{ field: 'createdAt', direction: 'desc' }] });
+    return this.listByUser(userId)
+      .then((notifications) => notifications.filter((notification) => !notification.read));
   }
 
   createOrderNotification(userId: string, orderId: string, title: string, message: string) {

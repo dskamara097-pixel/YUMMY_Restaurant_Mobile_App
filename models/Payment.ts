@@ -1,6 +1,8 @@
-﻿export type PaymentMethodModel = 'cashOnDelivery' | 'dummyMobileMoney' | 'dummyCard';
+export type PaymentMethodModel = 'cashOnDelivery' | 'dummyMobileMoney' | 'dummyCard';
 
-export type PaymentStatusModel = 'pending' | 'paid' | 'failed' | 'refunded';
+export type MobileMoneyProviderModel = 'Orange Money' | 'Afrimoney' | 'QMoney';
+
+export type PaymentStatusModel = 'pending' | 'awaitingApproval' | 'paid' | 'rejected' | 'failed' | 'refunded';
 
 export interface PaymentModel {
   id: string;
@@ -12,6 +14,11 @@ export interface PaymentModel {
   amount: number;
   currency: string;
   transactionReference: string;
+  provider?: MobileMoneyProviderModel;
+  mobileNumber?: string;
+  cardholderName?: string;
+  cardLast4?: string;
+  billingAddress?: string;
   failureReason?: string;
   createdAt: string;
   updatedAt?: string;

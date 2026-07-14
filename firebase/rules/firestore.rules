@@ -6,16 +6,22 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function hasProfileRole(role) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
     function isAdmin() {
-      return isSignedIn() && request.auth.token.role == 'admin';
+      return isSignedIn() && (request.auth.token.role == 'admin' || hasProfileRole('admin'));
     }
 
     function isVendor() {
-      return isSignedIn() && request.auth.token.role == 'vendor';
+      return isSignedIn() && (request.auth.token.role == 'vendor' || hasProfileRole('vendor'));
     }
 
     function isRider() {
-      return isSignedIn() && request.auth.token.role == 'rider';
+      return isSignedIn() && (request.auth.token.role == 'rider' || hasProfileRole('rider'));
     }
 
     function isOwner(userId) {
@@ -56,8 +62,24 @@ service cloud.firestore {
       return isRider() && resource.data.riderId == request.auth.uid;
     }
 
+    function preservesOwnRoleAndStatus() {
+      return request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status;
+    }
+
+    function ownsReviewRestaurant() {
+      return resource.data.targetType == 'restaurant' && ownsRestaurant(resource.data.targetId);
+    }
+
     match /users/{userId} {
-      allow read, create, update, delete: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAdmin() || isOwner(userId);
+      allow update: if isAdmin() || (isOwner(userId) && preservesOwnRoleAndStatus());
+      allow delete: if isAdmin() || isOwner(userId);
+    }
+
+    match /vendors/{vendorId} {
+      allow read, create, update, delete: if isOwner(vendorId) || isAdmin();
     }
 
     match /restaurants/{restaurantId} {
@@ -93,7 +115,8 @@ service cloud.firestore {
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if ownsRequestUserId() || isAdmin();
-      allow update, delete: if ownsExistingUserId() || isAdmin();
+      allow update: if ownsExistingUserId() || ownsReviewRestaurant() || isAdmin();
+      allow delete: if ownsExistingUserId() || isAdmin();
     }
 
     match /orders/{orderId} {

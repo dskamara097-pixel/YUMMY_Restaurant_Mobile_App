@@ -20,25 +20,61 @@ import { spacing } from '@/constants/theme';
 import { FoodModel, NotificationModel, PaymentModel } from '@/models';
 import { foodRepository } from '@/repositories/FoodRepository';
 import { notificationRepository } from '@/repositories/NotificationRepository';
+import { orderRepository } from '@/repositories/OrderRepository';
 import { paymentRepository } from '@/repositories/PaymentRepository';
 import { useFirestoreData } from '@/hooks/useFirestoreData';
 import { formatCurrency } from '@/utils/formatCurrency';
 
 function useAdminPayments() {
-  const loader = useCallback(() => paymentRepository.list({ sort: [{ field: 'createdAt', direction: 'desc' }] }), []);
+  const loader = useCallback(() => paymentRepository.list().then(sortByCreatedAt), []);
   return useFirestoreData<PaymentModel[]>('admin:payments', [], loader);
 }
 
 function useAdminNotifications() {
-  const loader = useCallback(() => notificationRepository.list({ sort: [{ field: 'createdAt', direction: 'desc' }] }), []);
+  const loader = useCallback(() => notificationRepository.list().then(sortByCreatedAt), []);
   return useFirestoreData<NotificationModel[]>('admin:notifications', [], loader);
+}
+
+function sortByCreatedAt<TItem extends { createdAt?: string }>(items: TItem[]) {
+  return [...items].sort((left, right) => new Date(right.createdAt ?? 0).getTime() - new Date(left.createdAt ?? 0).getTime());
 }
 
 function paymentTone(status: string) {
   if (status === 'paid') return 'success' as const;
-  if (status === 'failed') return 'danger' as const;
+  if (status === 'failed' || status === 'rejected') return 'danger' as const;
   if (status === 'refunded') return 'warning' as const;
   return 'info' as const;
+}
+
+function paymentLabel(status: string) {
+  if (status === 'awaitingApproval') return 'Awaiting Approval';
+  if (status === 'paid') return 'Paid';
+  if (status === 'rejected') return 'Rejected';
+  if (status === 'failed') return 'Failed';
+  if (status === 'refunded') return 'Refunded';
+  return 'Pending';
+}
+
+function methodLabel(method: string) {
+  if (method === 'cashOnDelivery') return 'Cash on Delivery';
+  if (method === 'dummyMobileMoney') return 'Dummy Mobile Money';
+  if (method === 'dummyCard') return 'Dummy Card Payment';
+  return method;
+}
+
+function maskedPhone(value?: string) {
+  if (!value) return 'Mobile number pending';
+  return `${'*'.repeat(Math.max(0, value.length - 2))}${value.slice(-2)}`;
+}
+
+function paymentMeta(payment: PaymentModel) {
+  if (payment.method === 'dummyMobileMoney') {
+    return `${payment.provider ?? 'Provider pending'} - ${maskedPhone(payment.mobileNumber)} - ${formatCurrency(payment.amount)} - Ref ${payment.transactionReference}`;
+  }
+  if (payment.method === 'dummyCard') {
+    return `Card ending ${payment.cardLast4 ?? '----'} - ${formatCurrency(payment.amount)} - Ref ${payment.transactionReference}`;
+  }
+  return `${formatCurrency(payment.amount)} - Ref ${payment.transactionReference}`;
 }
 
 export function AdminAddFoodScreen() {
@@ -122,6 +158,28 @@ export function AdminPaymentsScreen() {
   const [query, setQuery] = useState('');
   const payments = paymentsState.data.filter((payment) => `${payment.orderId} ${payment.userId} ${payment.method} ${payment.status}`.toLowerCase().includes(query.toLowerCase()));
 
+  async function approvePayment(payment: PaymentModel) {
+    await paymentRepository.updateStatus(payment.id, 'paid');
+    await orderRepository.update(payment.orderId, {
+      paymentId: payment.id,
+      paymentStatus: 'paid',
+      status: 'paymentConfirmed',
+    });
+    await notificationRepository.createPaymentNotification(payment.userId, payment.orderId, 'Payment received', 'Your dummy payment has been approved.');
+    await paymentsState.retry();
+  }
+
+  async function rejectPayment(payment: PaymentModel) {
+    await paymentRepository.updateStatus(payment.id, 'rejected', 'Rejected by administrator.');
+    await orderRepository.update(payment.orderId, {
+      paymentId: payment.id,
+      paymentStatus: 'rejected',
+      status: 'paymentRejected',
+    });
+    await notificationRepository.createPaymentNotification(payment.userId, payment.orderId, 'Payment rejected', 'Your dummy payment was rejected by the administrator.');
+    await paymentsState.retry();
+  }
+
   return (
     <AdminGate>
       <ScreenContainer scroll contentStyle={styles.screen}>
@@ -133,7 +191,7 @@ export function AdminPaymentsScreen() {
         <View style={styles.section}>
           <SectionHeader title="Payment Records" subtitle="Firestore dummy payments only" />
           {payments.map((payment) => (
-            <AdminEntityCard key={payment.id} title={`Payment ${payment.id}`} subtitle={`Order ${payment.orderId} - ${payment.method}`} meta={`${formatCurrency(payment.amount)} - User ${payment.userId}`} badge={payment.status} badgeTone={paymentTone(payment.status)} primaryActionLabel="Mark Paid" onPrimaryAction={() => paymentRepository.updateStatus(payment.id, 'paid')} dangerActionLabel="Mark Failed" onDangerAction={() => paymentRepository.updateStatus(payment.id, 'failed')} />
+            <AdminEntityCard key={payment.id} title={`Payment ${payment.id}`} subtitle={`Order ${payment.orderId} - ${methodLabel(payment.method)}`} meta={`${paymentMeta(payment)} - User ${payment.userId}`} badge={paymentLabel(payment.status)} badgeTone={paymentTone(payment.status)} primaryActionLabel="Approve" onPrimaryAction={() => void approvePayment(payment)} dangerActionLabel="Reject" onDangerAction={() => void rejectPayment(payment)} />
           ))}
         </View>
         <AppBadge label="No real payment gateway or external payment API is connected." tone="info" icon="card-outline" />

@@ -1,4 +1,4 @@
-﻿import { ImageSourcePropType } from 'react-native';
+﻿import type { ImageSourcePropType } from 'react-native';
 
 export const restaurantLogoImage = require('../assets/images/logos/restaurant-logo.png') as ImageSourcePropType;
 export const restaurantCoverImage = require('../assets/images/restaurants/restaurant-cover.png') as ImageSourcePropType;
@@ -55,27 +55,31 @@ function remoteImageSource(value?: string): ImageSourcePropType | null {
 }
 
 export function getFoodImageSource(value?: string): ImageSourcePropType {
-  const remoteSource = remoteImageSource(value);
-  if (remoteSource) return remoteSource;
+  try {
+    const remoteSource = remoteImageSource(value);
+    if (remoteSource) return remoteSource;
 
-  const key = normalizeImageKey(value);
-  const alias = foodAliases[key] ?? key;
+    const key = normalizeImageKey(value);
+    const alias = foodAliases[key] ?? key;
 
-  if (foodImages[alias]) return foodImages[alias];
-  if (key.includes('burger')) return foodImages.burger;
-  if (key.includes('pizza')) return foodImages.pizza;
-  if (key.includes('jollof')) return foodImages['jollof-rice'];
-  if (key.includes('fried-rice')) return foodImages['fried-rice'];
-  if (key.includes('fish') || key.includes('sea-bass')) return foodImages['grilled-fish'];
-  if (key.includes('chicken')) return foodImages['grilled-chicken'];
-  if (key.includes('alfredo') || key.includes('pasta')) return foodImages['alfredo-pasta'];
-  if (key.includes('parfait') || key.includes('mango')) return foodImages['mango-parfait'];
-  if (key.includes('milkshake')) return foodImages.milkshake;
-  if (key.includes('orange') || key.includes('juice')) return foodImages['orange-juice'];
-  if (key.includes('ice')) return foodImages['ice-cream'];
-  if (key.includes('shawarma')) return foodImages.shawarma;
+    if (foodImages[alias]) return foodImages[alias];
+    if (key.includes('burger')) return foodImages.burger;
+    if (key.includes('pizza')) return foodImages.pizza;
+    if (key.includes('jollof')) return foodImages['jollof-rice'];
+    if (key.includes('fried-rice')) return foodImages['fried-rice'];
+    if (key.includes('fish') || key.includes('sea-bass')) return foodImages['grilled-fish'];
+    if (key.includes('chicken')) return foodImages['grilled-chicken'];
+    if (key.includes('alfredo') || key.includes('pasta')) return foodImages['alfredo-pasta'];
+    if (key.includes('parfait') || key.includes('mango')) return foodImages['mango-parfait'];
+    if (key.includes('milkshake')) return foodImages.milkshake;
+    if (key.includes('orange') || key.includes('juice')) return foodImages['orange-juice'];
+    if (key.includes('ice')) return foodImages['ice-cream'];
+    if (key.includes('shawarma')) return foodImages.shawarma;
 
-  return foodImages['jollof-rice'];
+    return foodImages['jollof-rice'];
+  } catch {
+    return foodImages['jollof-rice'];
+  }
 }
 
 export function getRestaurantLogoSource(value?: string): ImageSourcePropType {
@@ -89,4 +93,5 @@ export function getRestaurantCoverSource(value?: string): ImageSourcePropType {
 export function getLocalFoodPlaceholder(name: string) {
   return `placeholder://${normalizeImageKey(name)}`;
 }
+
 

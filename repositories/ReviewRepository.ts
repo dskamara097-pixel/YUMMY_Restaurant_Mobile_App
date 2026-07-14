@@ -14,7 +14,8 @@ export class ReviewRepository extends FirestoreRepository<ReviewModel> {
   listByTarget(targetId: string, targetType?: ReviewModel['targetType']) {
     const filters = [{ field: 'targetId', value: targetId }];
     if (targetType) filters.push({ field: 'targetType', value: targetType });
-    return this.list({ filters, sort: [{ field: 'createdAt', direction: 'desc' }] });
+    return this.list({ filters })
+      .then((reviews) => reviews.sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()));
   }
 
   hide(reviewId: string) {

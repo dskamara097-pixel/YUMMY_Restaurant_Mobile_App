@@ -1,9 +1,10 @@
-﻿import { useCallback } from 'react';
+﻿import { useCallback, useMemo } from 'react';
 
 import { AddressModel } from '@/models/Address';
 import { addressRepository } from '@/repositories/AddressRepository';
 import { useAuth } from '@/hooks/useAuth';
 import { useFirestoreData } from '@/hooks/useFirestoreData';
+import { sampleAddressModels } from '@/utils/sampleModelFallbacks';
 
 export type SaveDefaultAddressInput = {
   recipientName: string;
@@ -13,8 +14,14 @@ export type SaveDefaultAddressInput = {
 
 export function useAddresses() {
   const { userId } = useAuth();
-  const loader = useCallback(async () => (userId ? addressRepository.listByUser(userId) : []), [userId]);
-  const state = useFirestoreData<AddressModel[]>(`addresses:user:${userId ?? 'guest'}`, [], loader);
+  const initialAddresses = useMemo(() => sampleAddressModels.map((address) => ({ ...address, userId: userId ?? address.userId })), [userId]);
+  const loader = useCallback(async () => {
+    if (!userId) return initialAddresses;
+
+    const addresses = await addressRepository.listByUser(userId);
+    return addresses.length > 0 ? addresses : initialAddresses;
+  }, [initialAddresses, userId]);
+  const state = useFirestoreData<AddressModel[]>(`addresses:user:${userId ?? 'guest'}`, initialAddresses, loader);
   const retry = state.retry;
 
   const saveDefaultAddress = useCallback(async (input: SaveDefaultAddressInput) => {

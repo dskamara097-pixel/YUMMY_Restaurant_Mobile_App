@@ -36,6 +36,8 @@ export default function VendorSettingsScreen() {
         <VendorActionCard title="Restaurant Profile" subtitle={restaurantState.data?.name ?? 'Create or edit restaurant profile'} icon="storefront-outline" onPress={() => router.push('/(vendor)/profile' as Href)} />
         <VendorActionCard title="Menu Management" subtitle="Food items and categories" icon="fast-food-outline" onPress={() => router.push('/(vendor)/menu' as Href)} />
         <VendorActionCard title="Order Management" subtitle="Status timeline only, no GPS map" icon="receipt-outline" onPress={() => router.push('/(vendor)/orders' as Href)} />
+        <VendorActionCard title="Notifications" subtitle="Vendor notification center" icon="notifications-outline" onPress={() => router.push('/(vendor)/notifications' as Href)} />
+        <VendorActionCard title="Reviews" subtitle="View and reply to customer reviews" icon="star-outline" onPress={() => router.push('/(vendor)/reviews' as Href)} />
       </View>
       <View style={styles.panel}><SectionHeader title="Phase 7 Boundaries" /><AppBadge label="No super-admin panel" tone="info" icon="shield-outline" /><AppBadge label="No payment gateway" tone="info" icon="card-outline" /><AppBadge label="No GPS, Google Maps, or live tracking" tone="info" icon="location-outline" /><AppBadge label="No push notifications" tone="info" icon="notifications-outline" /></View>
       <AppButton label="Logout" variant="danger" leftIcon="log-out-outline" loading={auth.loading} onPress={handleLogout} />

@@ -37,6 +37,8 @@ export default function VendorCategoryManagementScreen() {
 
   async function handleSave() {
     if (!form.name.trim()) { setNotice('Category name is required.'); return; }
+    const duplicate = categoriesState.data.some((category) => category.id !== form.id && category.name.trim().toLowerCase() === form.name.trim().toLowerCase());
+    if (duplicate) { setNotice('A category with this name already exists.'); return; }
     const sortOrder = Number(form.sortOrder);
     if (!Number.isFinite(sortOrder)) { setNotice('Sort order must be a number.'); return; }
     try {

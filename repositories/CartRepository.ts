@@ -7,11 +7,44 @@ function calculateSubtotal(items: CartItemModel[]) {
 }
 
 function normalizeItems(items: CartItemModel[]) {
-  return items.map((item) => ({
-    ...item,
-    quantity: Math.max(1, item.quantity),
-    lineTotal: item.unitPrice * Math.max(1, item.quantity),
-  }));
+  return items.map((item) => {
+    const quantity = Math.max(1, item.quantity);
+    const nextItem: CartItemModel = {
+      foodId: item.foodId,
+      restaurantId: item.restaurantId,
+      name: item.name,
+      unitPrice: item.unitPrice,
+      quantity,
+      lineTotal: item.unitPrice * quantity,
+    };
+
+    if (item.restaurantName) {
+      nextItem.restaurantName = item.restaurantName;
+    }
+
+    if (item.imageUrl) {
+      nextItem.imageUrl = item.imageUrl;
+    }
+
+    return nextItem;
+  });
+}
+
+function createCartData(customerId: string, items: CartItemModel[]): Omit<CartModel, 'id'> {
+  const nextItems = normalizeItems(items);
+  const timestamp = new Date().toISOString();
+  const cartData: Omit<CartModel, 'id'> = {
+    customerId,
+    items: nextItems,
+    subtotal: calculateSubtotal(nextItems),
+    updatedAt: timestamp,
+  };
+
+  if (nextItems[0]?.restaurantId) {
+    cartData.restaurantId = nextItems[0].restaurantId;
+  }
+
+  return cartData;
 }
 
 export class CartRepository extends FirestoreRepository<CartModel> {
@@ -20,27 +53,13 @@ export class CartRepository extends FirestoreRepository<CartModel> {
   }
 
   async getActiveCartForCustomer(customerId: string): Promise<CartModel | null> {
-    const directCart = await this.getById(customerId);
-
-    if (directCart) {
-      return directCart;
-    }
-
-    const carts = await this.list({ filters: [{ field: 'customerId', value: customerId }], sort: [{ field: 'updatedAt', direction: 'desc' }], pageSize: 1 });
-    return carts[0] ?? null;
+    return this.getById(customerId);
   }
 
   async saveActiveCart(customerId: string, items: CartItemModel[]) {
-    const nextItems = normalizeItems(items);
-    const restaurantId = nextItems[0]?.restaurantId;
-
     return this.create({
       id: customerId,
-      customerId,
-      restaurantId,
-      items: nextItems,
-      subtotal: calculateSubtotal(nextItems),
-      updatedAt: new Date().toISOString(),
+      ...createCartData(customerId, items),
     });
   }
 

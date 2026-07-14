@@ -1,6 +1,6 @@
 ﻿import type { Href } from 'expo-router';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppBadge } from '@/components/common/AppBadge';
 import { AppIcon } from '@/components/common/AppIcon';
@@ -23,7 +23,7 @@ import { useOffers } from '@/hooks/useOffers';
 import { useRestaurants } from '@/hooks/useRestaurants';
 import { FoodItem, Restaurant } from '@/types';
 import { mapFoodModel, mapOfferModel, mapRestaurantModel } from '@/utils/firestoreAdapters';
-import { getRestaurantLogoSource } from '@/utils/localImages';
+import { getRestaurantCoverSource, getRestaurantLogoSource } from '@/utils/localImages';
 
 function openRestaurant(restaurantId: string) {
   router.push({ pathname: '/(customer)/restaurants/[restaurantId]', params: { restaurantId } } as unknown as Href);
@@ -99,7 +99,7 @@ export default function CustomerHomeScreen() {
           <AppText variant="title" tone="inverse">Warm meals, fast delivery.</AppText>
           <AppText tone="inverse">Discover restaurants and meals from the YUMMY Firestore database.</AppText>
         </View>
-        <View style={styles.promoIcon}><AppIcon name="fast-food-outline" size={42} color={colors.brand.primary} /></View>
+        <View style={styles.promoIcon}><Image source={getRestaurantCoverSource(restaurants[0]?.coverImageUrl)} style={styles.promoImage} /></View>
       </View>
 
       {isLoading ? <LoadingState title="Loading YUMMY" message="Fetching restaurants, meals, categories, and offers from Firestore." /> : null}
@@ -142,7 +142,8 @@ const styles = StyleSheet.create({
   brandCopy: { flex: 1, gap: spacing.xs },
   promoBanner: { alignItems: 'center', backgroundColor: colors.brand.primary, borderRadius: radius.xl, flexDirection: 'row', gap: spacing.lg, overflow: 'hidden', padding: spacing.xl, ...shadows.card },
   promoCopy: { flex: 1, gap: spacing.sm },
-  promoIcon: { alignItems: 'center', backgroundColor: colors.neutral.surface, borderRadius: radius.xl, height: 86, justifyContent: 'center', width: 86 },
+  promoIcon: { alignItems: 'center', backgroundColor: colors.neutral.surface, borderRadius: radius.xl, height: 86, justifyContent: 'center', overflow: 'hidden', width: 86 },
+  promoImage: { height: '100%', width: '100%' },
   section: { gap: spacing.md },
   horizontalList: { gap: spacing.md, paddingRight: spacing.xl },
   categoryItem: { width: 150 },
@@ -157,4 +158,5 @@ const styles = StyleSheet.create({
   offerGrid: { gap: spacing.md },
   offerCard: { backgroundColor: colors.neutral.surface, borderColor: colors.neutral.line, borderRadius: radius.lg, borderWidth: 1, gap: spacing.sm, padding: spacing.lg, ...shadows.soft },
 });
+
 

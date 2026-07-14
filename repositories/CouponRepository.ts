@@ -12,11 +12,13 @@ export class CouponRepository extends FirestoreRepository<CouponModel> {
   }
 
   listActive() {
-    return this.list({ filters: [{ field: 'active', value: true }], sort: [{ field: 'expiresAt' }] });
+    return this.list({ filters: [{ field: 'active', value: true }] })
+      .then((coupons) => coupons.sort((left, right) => left.expiresAt.localeCompare(right.expiresAt)));
   }
 
   listByRestaurant(restaurantId: string) {
-    return this.list({ filters: [{ field: 'restaurantId', value: restaurantId }], sort: [{ field: 'expiresAt' }] });
+    return this.list({ filters: [{ field: 'restaurantId', value: restaurantId }] })
+      .then((coupons) => coupons.sort((left, right) => left.expiresAt.localeCompare(right.expiresAt)));
   }
 
   getByCode(code: string) {

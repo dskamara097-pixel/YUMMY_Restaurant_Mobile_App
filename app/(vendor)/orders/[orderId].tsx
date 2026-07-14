@@ -18,12 +18,20 @@ import { getVendorOrderStatusLabel, useVendorOrder, useVendorOrders } from '@/ho
 import { useVendorRestaurant } from '@/hooks/useVendorRestaurant';
 import { formatCurrency } from '@/utils/formatCurrency';
 
+function paymentMethodLabel(method?: string) {
+  if (method === 'cashOnDelivery') return 'Cash on Delivery';
+  if (method === 'dummyMobileMoney') return 'Dummy Mobile Money';
+  if (method === 'dummyCard') return 'Dummy Card';
+  return 'Payment pending';
+}
+
 export default function VendorOrderDetailsScreen() {
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const orderState = useVendorOrder(orderId);
   const restaurantState = useVendorRestaurant();
   const ordersState = useVendorOrders(restaurantState.data?.id);
   const order = orderState.data;
+  const payment = order ? ordersState.paymentsByOrderId.get(order.id) : undefined;
 
   return (
     <ScreenContainer scroll contentStyle={styles.screen}>
@@ -32,7 +40,8 @@ export default function VendorOrderDetailsScreen() {
       {orderState.error ? <FriendlyErrorState title="Order unavailable" message={orderState.error} onRetry={orderState.retry} /> : null}
       {!order && !orderState.loading ? <EmptyState title="Order not found" message="The selected order document is unavailable." icon="receipt-outline" /> : null}
       {order ? <>
-        <View style={styles.statsGrid}><VendorStatCard label="Total" value={formatCurrency(order.total)} icon="cash-outline" tone="success" /><VendorStatCard label="Status" value={getVendorOrderStatusLabel(order.status)} icon="time-outline" tone="warning" /><VendorStatCard label="Payment" value={order.paymentStatus} icon="card-outline" tone="info" /></View>
+        <View style={styles.statsGrid}><VendorStatCard label="Total" value={formatCurrency(order.total)} icon="cash-outline" tone="success" /><VendorStatCard label="Status" value={getVendorOrderStatusLabel(order.status)} icon="time-outline" tone="warning" /><VendorStatCard label="Payment" value={payment?.status ?? order.paymentStatus} icon="card-outline" tone="info" /></View>
+        <View style={styles.section}><SectionHeader title="Customer & Payment" /><AppText>Customer: {order.customerName ?? order.customerId}</AppText><AppText>Payment Method: {paymentMethodLabel(payment?.method)}</AppText><AppText>Payment Status: {payment?.status ?? order.paymentStatus}</AppText><AppText>Order Time: {order.createdAt}</AppText></View>
         <View style={styles.section}><SectionHeader title="Items Ordered" />{order.items.map((item) => <VendorEntityCard key={item.foodId} title={item.name} subtitle={`${item.quantity} x ${formatCurrency(item.unitPrice)}`} meta={`Subtotal ${formatCurrency(item.lineTotal)}`} />)}</View>
         <View style={styles.section}><SectionHeader title="Price Breakdown" /><AppText>Subtotal: {formatCurrency(order.subtotal)}</AppText><AppText>Delivery Fee: {formatCurrency(order.deliveryFee)}</AppText><AppText>Service Fee: {formatCurrency(order.serviceFee)}</AppText><AppText>Discount: {formatCurrency(order.discount)}</AppText><AppText variant="bodyStrong">Total: {formatCurrency(order.total)}</AppText></View>
         {order.notes ? <AppBadge label={`Note: ${order.notes}`} tone="info" icon="chatbubble-outline" /> : null}

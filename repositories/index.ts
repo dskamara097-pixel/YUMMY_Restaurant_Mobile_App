@@ -13,6 +13,7 @@ export { RestaurantRepository, restaurantRepository } from '@/repositories/Resta
 export { ReviewRepository, reviewRepository } from '@/repositories/ReviewRepository';
 export { SettingsRepository, settingsRepository } from '@/repositories/SettingsRepository';
 export { UserRepository, userRepository } from '@/repositories/UserRepository';
+export { VendorRepository, vendorRepository } from '@/repositories/VendorRepository';
 export type { Repository, RepositoryCreateInput, RepositoryFilter, RepositoryListResult, RepositoryQueryOptions, RepositorySort } from '@/repositories/Repository';
 export { FirestoreRepository } from '@/repositories/Repository';
 

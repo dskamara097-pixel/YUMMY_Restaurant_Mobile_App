@@ -38,9 +38,17 @@ export default function VendorDashboardScreen() {
       {restaurant ? <>
         <View style={styles.heroCard}><AppBadge label={restaurant.active ? 'Active restaurant' : 'Hidden from customers'} tone={restaurant.active ? 'success' : 'warning'} icon="storefront-outline" /><AppText variant="title">{restaurant.name}</AppText><AppText tone="muted">{restaurant.description}</AppText></View>
         <View style={styles.statsGrid}>
-          <VendorStatCard label="Sales" value={formatCurrency(analytics.salesTotal)} icon="cash-outline" tone="success" />
-          <VendorStatCard label="Orders" value={`${analytics.totalOrders}`} icon="receipt-outline" />
+          <VendorStatCard label="Today's Orders" value={`${analytics.todayOrders}`} icon="calendar-outline" />
           <VendorStatCard label="Pending" value={`${analytics.pendingOrders}`} icon="time-outline" tone="warning" />
+          <VendorStatCard label="Preparing" value={`${analytics.preparingOrders}`} icon="flame-outline" tone="warning" />
+          <VendorStatCard label="Ready" value={`${analytics.readyOrders}`} icon="checkmark-circle-outline" tone="info" />
+          <VendorStatCard label="Out For Delivery" value={`${analytics.outForDeliveryOrders}`} icon="bicycle-outline" tone="info" />
+          <VendorStatCard label="Delivered" value={`${analytics.completedOrders}`} icon="bag-check-outline" tone="success" />
+          <VendorStatCard label="Cancelled" value={`${analytics.cancelledOrders}`} icon="close-circle-outline" tone="danger" />
+          <VendorStatCard label="Today's Revenue" value={formatCurrency(analytics.todayRevenue)} icon="cash-outline" tone="success" />
+          <VendorStatCard label="Monthly Revenue" value={formatCurrency(analytics.monthlyRevenue)} icon="analytics-outline" tone="success" />
+          <VendorStatCard label="Popular Food" value={analytics.mostPopularFood} icon="flame-outline" tone="info" />
+          <VendorStatCard label="Average Rating" value={`${restaurant.rating.toFixed(1)}`} icon="star-outline" tone="warning" />
           <VendorStatCard label="Menu" value={`${analytics.menuItems}`} icon="fast-food-outline" tone="info" />
         </View>
         <View style={styles.section}><SectionHeader title="Management" subtitle="Firestore-backed vendor actions" />
@@ -48,6 +56,8 @@ export default function VendorDashboardScreen() {
           <VendorActionCard title="Menu Management" subtitle="Food items, categories, and availability" icon="fast-food-outline" badge={`${analytics.availableFoods} available`} onPress={() => router.push('/(vendor)/menu' as Href)} />
           <VendorActionCard title="Order Management" subtitle="Accept, reject, and update order status" icon="receipt-outline" badge={`${analytics.pendingOrders} pending`} onPress={() => router.push('/(vendor)/orders' as Href)} />
           <VendorActionCard title="Coupons & Offers" subtitle="Manage restaurant promotions" icon="gift-outline" onPress={() => router.push('/(vendor)/offers' as Href)} />
+          <VendorActionCard title="Reviews" subtitle="Ratings, comments, and owner replies" icon="star-outline" onPress={() => router.push('/(vendor)/reviews' as Href)} />
+          <VendorActionCard title="Notifications" subtitle="Orders, payments, reviews, and stock alerts" icon="notifications-outline" onPress={() => router.push('/(vendor)/notifications' as Href)} />
           <VendorActionCard title="Analytics" subtitle="Sales and order summary" icon="analytics-outline" onPress={() => router.push('/(vendor)/analytics' as Href)} />
         </View>
       </> : null}

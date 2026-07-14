@@ -30,7 +30,7 @@ export function VendorBottomNavigation({ active }: { active: VendorNavKey }) {
         const selected = item.key === active;
         return (
           <Link key={item.key} href={item.href as unknown as Href} asChild>
-            <Pressable accessibilityRole="button" accessibilityState={{ selected }} style={[styles.item, selected && styles.activeItem]}>
+            <Pressable accessibilityRole="button" accessibilityState={{ selected }} style={StyleSheet.flatten([styles.item, selected ? styles.activeItem : undefined])}>
               <AppIcon name={item.icon} size={20} color={selected ? colors.brand.primary : colors.neutral.muted} />
               <AppText variant="caption" tone={selected ? 'primary' : 'muted'} numberOfLines={1} adjustsFontSizeToFit>{item.label}</AppText>
             </Pressable>

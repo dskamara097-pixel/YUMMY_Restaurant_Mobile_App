@@ -11,6 +11,7 @@ import { PasswordInput } from '@/components/forms/PasswordInput';
 import { AuthScreenLayout } from '@/components/layout/AuthScreenLayout';
 import { spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { userRepository } from '@/repositories/UserRepository';
 import { FormErrors, hasErrors, LoginFormValues, validateLogin } from '@/utils/authValidation';
 
 export default function LoginScreen() {
@@ -40,7 +41,14 @@ export default function LoginScreen() {
       if (user && !user.emailVerified) {
         setNotice('Login successful. Please verify your email to unlock protected account actions.');
       }
-      router.replace('/(customer)/home');
+      const profile = user ? await userRepository.getById(user.uid) : null;
+      if (profile?.role === 'admin') {
+        router.replace('/(admin)/dashboard');
+      } else if (profile?.role === 'vendor') {
+        router.replace('/(vendor)/dashboard' as Href);
+      } else {
+        router.replace('/(customer)/home');
+      }
     } catch {
       setNotice('');
     }

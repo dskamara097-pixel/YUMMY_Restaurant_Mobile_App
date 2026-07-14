@@ -10,6 +10,7 @@ import { PasswordInput } from '@/components/forms/PasswordInput';
 import { AuthScreenLayout } from '@/components/layout/AuthScreenLayout';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { userRepository } from '@/repositories/UserRepository';
 import { FormErrors, hasErrors, RegisterFormValues, validateRegistration } from '@/utils/authValidation';
 
 export default function RegisterScreen() {
@@ -44,11 +45,26 @@ export default function RegisterScreen() {
     }
 
     try {
-      await auth.register({
+      const existingUsername = await userRepository.getByUsername(values.username);
+      if (existingUsername) {
+        setErrors((current) => ({ ...current, username: 'This username is already taken.' }));
+        return;
+      }
+      const user = await auth.register({
         email: values.email,
         password: values.password,
         displayName: values.fullName,
       });
+      if (user) {
+        await userRepository.ensureCustomerProfile({
+          id: user.uid,
+          fullName: values.fullName,
+          username: values.username,
+          email: values.email,
+          phone: values.phone,
+          address: values.address,
+        });
+      }
       setSubmitted(true);
     } catch {
       setSubmitted(false);

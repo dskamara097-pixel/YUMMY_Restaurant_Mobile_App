@@ -25,8 +25,14 @@ export function AdminBottomNavigation({ active }: { active: AdminNavKey }) {
         const selected = item.key === active;
         return (
           <Link key={item.key} href={item.href as Href} asChild>
-            <Pressable accessibilityRole="button" accessibilityState={{ selected }} style={[styles.item, selected && styles.activeItem]}>
-              <AppIcon name={item.icon} size={20} color={selected ? colors.neutral.ink : colors.neutral.muted} />
+<Pressable
+  accessibilityRole="button"
+  accessibilityState={{ selected }}
+  style={StyleSheet.flatten([
+    styles.item,
+    selected ? styles.activeItem : undefined,
+  ])}
+>              <AppIcon name={item.icon} size={20} color={selected ? colors.neutral.ink : colors.neutral.muted} />
               <AppText variant="caption" tone={selected ? 'default' : 'muted'} numberOfLines={1} adjustsFontSizeToFit>{item.label}</AppText>
             </Pressable>
           </Link>

@@ -1,21 +1,33 @@
-﻿import { useCallback } from 'react';
+﻿import { useCallback, useMemo } from 'react';
 
 import { UserModel } from '@/models/User';
 import { userRepository } from '@/repositories/UserRepository';
 import { useAuth } from '@/hooks/useAuth';
 import { useFirestoreData } from '@/hooks/useFirestoreData';
+import { sampleUserModel } from '@/utils/sampleModelFallbacks';
 
 export type SaveUserProfileInput = {
   fullName: string;
   phone: string;
   username?: string;
   email?: string;
+  address?: string;
 };
 
 export function useUserProfile() {
   const auth = useAuth();
-  const loader = useCallback(async () => (auth.userId ? userRepository.getById(auth.userId) : null), [auth.userId]);
-  const state = useFirestoreData<UserModel | null>(`user-profile:${auth.userId ?? 'guest'}`, null, loader);
+  const initialProfile = useMemo(() => ({
+    ...sampleUserModel,
+    id: auth.userId ?? sampleUserModel.id,
+    email: auth.email ?? sampleUserModel.email,
+    fullName: auth.displayName ?? sampleUserModel.fullName,
+  }), [auth.displayName, auth.email, auth.userId]);
+  const loader = useCallback(async () => {
+    if (!auth.userId) return initialProfile;
+
+    return (await userRepository.getById(auth.userId)) ?? initialProfile;
+  }, [auth.userId, initialProfile]);
+  const state = useFirestoreData<UserModel | null>(`user-profile:${auth.userId ?? 'guest'}`, initialProfile, loader);
   const retry = state.retry;
 
   const saveProfile = useCallback(async (input: SaveUserProfileInput) => {
@@ -34,6 +46,7 @@ export function useUserProfile() {
         username,
         usernameLower: username.toLowerCase(),
         email: input.email?.trim().toLowerCase() ?? auth.email ?? existing.email,
+        address: input.address?.trim() || existing.address,
         updatedAt: timestamp,
       });
     } else {
@@ -44,6 +57,7 @@ export function useUserProfile() {
         usernameLower: username.toLowerCase(),
         email: input.email?.trim().toLowerCase() ?? auth.email ?? undefined,
         phone: input.phone.trim(),
+        address: input.address?.trim() || 'Address pending',
         role: 'customer',
         status: 'active',
         createdAt: timestamp,
